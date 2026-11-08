@@ -17,5 +17,5 @@ export function setupMaterials({error,onChange,busy}){
   }catch(e){error(e.message);}
  }
  $('material-add').onclick=()=>add();$('materials-manage-add').onclick=()=>add();$('material').addEventListener('change',()=>{if(!busy())onChange(text(),files.length).catch(e=>error(e.message));});render();
- return {add,addExample:()=>add('materials-example'),text,count:()=>files.length};
+ return {add,addExample:()=>add('materials-example'),text,names:()=>files.map(f=>f.name),count:()=>files.length};
 }

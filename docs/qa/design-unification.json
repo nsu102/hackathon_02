@@ -1,0 +1,28 @@
+{
+  "shared_theme": "study-theme.css",
+  "same_computed_styles_tested": true,
+  "shared_opacity_native_tested": true,
+  "study_material_reuse_in_model_prompt_tested": true,
+  "separate_pad_upload_removed": true,
+  "signal_path": "M3 12h4l3-7 4 14 3-7h4",
+  "brand_surfaces": [
+    "study window",
+    "scratchpad",
+    "menu bar",
+    "application icon",
+    "product logo"
+  ],
+  "template_icons": {
+    "StudySignalTemplate.png": {
+      "width": 16,
+      "height": 16,
+      "has_alpha": true
+    },
+    "StudySignalTemplate@2x.png": {
+      "width": 32,
+      "height": 32,
+      "has_alpha": true
+    }
+  },
+  "icon_preview_visually_checked": true
+}

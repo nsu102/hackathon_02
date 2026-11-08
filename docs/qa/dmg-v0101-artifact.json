@@ -1,0 +1,12 @@
+{
+  "file": "Study-Signal-0.10.1-arm64.dmg",
+  "bytes": 1612321082,
+  "sha256": "0977cb16724fcbf880d8d432c8d4ca93c111444b2fc97fa051648ac8c2fbf23b",
+  "hdiutil_checksum": "VALID",
+  "codesign": "ad-hoc; deep strict verified",
+  "notarized": false,
+  "architecture": "arm64",
+  "minimum_macos": "15.0",
+  "shared_theme_and_signal_assets_match_source": true,
+  "backend_reused_from_verified_v010": true
+}

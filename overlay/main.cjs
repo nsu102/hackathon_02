@@ -60,6 +60,7 @@ ipcMain.handle('window:action', async (e, action, data) => {
   validSender(e);
   if (action === 'displays') return screen.getAllDisplays().map(d=>({id:d.id,label:d.label||'모니터 '+d.id,...d.bounds,scale:d.scaleFactor}));
   if (action === 'overlay-bounds') return [win,...(bubbles?.windows()||[]),...(checklist?.windows()||[]),...(scratchpad?.windows()||[])].filter(w=>w&&!w.isDestroyed()&&w.isVisible()).map(w=>w.getBounds());
+  if (action === 'scratchpad-context') {scratchpad.context(data);return;}
   if (action === 'scratchpad-show') {scratchpad.show();return;}
   if (action === 'scratchpad-begin') return scratchpad.begin();
   if (action === 'scratchpad-complete') {scratchpad.complete(data?.id,data?.message);return;}
@@ -163,10 +164,6 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else app.whenReady().then(async () => {
   protocol.handle('study', async request => {
     const url = new URL(request.url);
-    if(url.hostname==='pad-file'){
-      const asset=scratchpad?.asset(url.pathname.slice(1));if(!asset)return new Response('Not found',{status:404});
-      const file=await electronNet.fetch(pathToFileURL(asset.path).toString());return new Response(file.body,{status:file.status,headers:{'Content-Type':asset.mime,'Cache-Control':'no-store'}});
-    }
     if (url.hostname !== 'app') return new Response('Forbidden', { status: 403 });
     let file; try { file = path.resolve(__dirname, '.' + decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname)); } catch { return new Response('Bad path', { status: 400 }); }
     if (!file.startsWith(__dirname + path.sep) || !/\.(html|js|mjs|css|wasm|task|onnx|woff2|svg|png|json)$/.test(file)) return new Response('Forbidden', { status: 403 });
@@ -182,7 +179,7 @@ else app.whenReady().then(async () => {
   win.webContents.session.setPermissionRequestHandler((contents, permission, callback, details) => callback(contents === win.webContents && permission === 'media' && (details.mediaTypes?.includes('audio') ? micIntent > Date.now() : cameraIntent > Date.now())));
   bubbles=require('./bubbles.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),action:(action,value)=>{if(['settings','history','materials'].includes(action))showMain(action);else win?.webContents.send('app:action',{action:'bubble-'+action,value});}});
   checklist=require('./checklist.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),action:(name,value)=>{if(name==='settings')showMain('plan-settings');else win?.webContents.send('app:action',{action:'plan-'+name,value});}});
-  scratchpad=require('./scratchpad.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),folder:path.join(qaData||path.join(root,'data'),'scratchpad'),copyText:text=>clipboard.writeText(text),openFile:async file=>{const message=await shell.openPath(file);if(message)throw new Error('첨부 파일을 열지 못했어요.');},onVisibility:shown=>{checklist.suppress(captureSuppressed||shown);if(shown)checklist.hide();else if(!captureSuppressed)checklist.update({});}});
+  scratchpad=require('./scratchpad.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),folder:path.join(qaData||path.join(root,'data'),'scratchpad'),copyText:text=>clipboard.writeText(text),onVisibility:shown=>{checklist.suppress(captureSuppressed||shown);if(shown)checklist.hide();else if(!captureSuppressed)checklist.update({});}});
   voice=await require('./native-voice.cjs')({win:()=>win,display:()=>gazeDisplay,api,systemPreferences,globalShortcut,desktopCapturer,pointer:()=>pointerWin,onStart:()=>{micIntent=Date.now()+15000;},extraWindows:()=>[...bubbles.windows(),...checklist.windows(),...scratchpad.windows()],onCapture:active=>{captureSuppressed=active;bubbles.suppress(active);scratchpad.suppress(active);checklist.suppress(active||scratchpad.isShown());},screen});
   powerMonitor.on('suspend',()=>voice.cancel('잠자기 전환으로 녹음을 폐기했어요.'));
   powerMonitor.on('lock-screen',()=>voice.cancel('화면 잠금으로 녹음을 폐기했어요.'));

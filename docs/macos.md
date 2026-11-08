@@ -4,7 +4,7 @@
 
 ## 메뉴 막대
 
-상단의 눈 안에 음성 파형이 있는 아이콘을 누르고 **설정…**을 고른다. 같은 메뉴에서 감지 켜기/끄기, 이탈 알림, 잔소리 음소거, 휴식, 도우미 열기, 종료를 선택할 수 있다. 닫기(×)는 창만 숨기고 감지는 유지한다. Cmd+Shift+Space로 다시 표시할 수 있다.
+상단의 파형 시그널 아이콘을 누르고 **설정…**을 고른다. 같은 메뉴에서 감지 켜기/끄기, 이탈 알림, 잔소리 음소거, 휴식, 도우미 열기, 종료를 선택할 수 있다. 닫기(×)는 창만 숨기고 감지는 유지한다. Cmd+Shift+Space로 다시 표시할 수 있다.
 
 SVG 원본: `overlay/assets/StudySignalTemplate.svg`. macOS 표시에는 투명 16×16/72dpi와 32×32/144dpi 템플릿 PNG를 함께 사용한다. 이름의 Template/@2x 규칙과 setTemplateImage를 적용해 밝고 어두운 메뉴 막대에 대응한다. [Electron Tray](https://www.electronjs.org/docs/latest/api/tray), [NativeImage](https://www.electronjs.org/docs/latest/api/native-image).
 
@@ -24,7 +24,7 @@ SVG 원본: `overlay/assets/StudySignalTemplate.svg`. macOS 표시에는 투명 
 
 ## v0.10 DMG 설치판
 
-`Study-Signal-0.10.0-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·Python·Torch와 기본 UniGaze-L 모델을 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
+`Study-Signal-0.10.1-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·Python·Torch와 기본 UniGaze-L 모델을 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
 
 설정은 **⌘,**(앱에 포커스가 있을 때) 또는 메뉴 막대 아이콘 → 설정에서 연다. OpenRouter 키를 입력하고 ‘저장 후 앱 다시 시작’을 누른다. 키 입력칸을 비우면 기존 키를 유지한다. 진행 중인 학습은 종료한 뒤 저장한다.
 
@@ -56,6 +56,6 @@ OpenRouter의 Gemini TTS를 기본으로 사용한다. 연결 키는 기존 키 
 
 ## 좌상단 패드
 
-실행하면 선택 모니터 좌상단에 반투명 스크래치패드가 열린다. 메뉴 막대 → 스크래치패드 열기 또는 앱 포커스 상태에서 ⌘⇧P로 연다. 고정 핀을 끄면 항상 위 표시를 해제한다. 숨겨도 메모/초안/첨부는 남는다. 패드 첨부와 AI 질문용 자료 추가는 별도다.
+실행하면 선택 모니터 좌상단에 반투명 스크래치패드가 열린다. 메뉴 막대 → 스크래치패드 열기 또는 앱 포커스 상태에서 ⌘⇧P로 연다. 고정 핀을 끄면 항상 위 표시를 해제한다. 숨겨도 메모/초안/첨부는 남는다. 파일은 학습 시작에서 한 번만 추가하고 패드에서는 같은 자료를 그대로 사용한다. 별도 파일 추가 버튼은 없다.
 
 논문을 열고 ⌘⇧Enter 누르기 → “이거 번역해줘” → 키 놓기. 알겠습니다 안내 뒤 번역과 요약이 패드에 저장된다. 음성 읽기를 끈 경우 안내도 글로만 표시한다. 패드 데이터를 저장하는 위치는 설치판의 data/scratchpad이며 기본 Application Support 안에 있다.

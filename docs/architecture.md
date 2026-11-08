@@ -38,6 +38,8 @@ v0.8 설치판: `runtime.cjs`가 앱 리소스(서비스·모델)와 쓰기 가�
 
 `scratchpad.cjs`는 선택 모니터 workArea의 좌상단 +20 DIP에 별도 투명 창을 만든다. `showInactive`로 타 앱 입력 포커스를 빼앗지 않으며 메모를 클릭하면 편집할 수 있다. 자체 캡처 제외 창 목록에 포함한다. 학습 목록과 동시에 겹치지 않게 전환한다.
 
-`scratchpad-store.cjs`는 data/scratchpad에 0600 JSON과 명시적으로 첨부한 파일 복사본을 저장한다. 원자적 교체·상한·안전한 파일 ID를 사용하고 중단된 요청은 완료로 복원하지 않는다. IPC는 실제 패드 webContents와 고정 URL을 검사한다. 모델/메모 텍스트는 textContent로 표시한다.
+`scratchpad-store.cjs`는 data/scratchpad에 0600 JSON 메모/결과를 저장한다. 이전 버전의 파일 복사본은 호환용 저장소에만 보존한다. 원자적 교체·상한·안전한 파일 ID를 사용하고 중단된 요청은 완료로 복원하지 않는다. IPC는 실제 패드 webContents와 고정 URL을 검사한다. 모델/메모 텍스트는 textContent로 표시한다.
 
-`document_help.py`는 전사된 번역/요약 의도를 분리하고 현재 캡처의 읽을 수 있는 범위로 프롬프트를 제한한다. 번역·요약 출력의 문자열 계약을 검사해 artifact를 반환한다. 요청 시작의 pending 블록을 완료/실패 상태로 바꾸며 취소된 응답은 화면에 적용하지 않는다. 패드의 로컬 첨부는 질문 자료로 자동 합치지 않는다.
+`document_help.py`는 전사된 번역/요약 의도를 분리하고 현재 캡처의 읽을 수 있는 범위로 프롬프트를 제한한다. 번역·요약 출력의 문자열 계약을 검사해 artifact를 반환한다. 요청 시작의 pending 블록을 완료/실패 상태로 바꾸며 취소된 응답은 화면에 적용하지 않는다. 패드에는 파일 업로드 경로가 없다. 기존 학습 세션의 material을 음성 모델 프롬프트에 사용하고, 제한된 scratchpad-context IPC는 자료 이름·목표·자료 존재 여부만 패드에 표시한다.
+
+index.html과 scratchpad.html은 study-theme.css를 공유한다. study-opacity 저장소 변경 이벤트로 패드 불투명도도 갱신한다.

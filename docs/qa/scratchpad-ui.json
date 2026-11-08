@@ -2,7 +2,9 @@
   "passed": [
     "free text note",
     "draft survives reload",
-    "local file attachment",
+    "no duplicate file input or file-drop upload",
+    "study material names shared and refreshed",
+    "same computed theme as main study window",
     "pin setting",
     "acknowledgement placeholder",
     "translation and summary together",

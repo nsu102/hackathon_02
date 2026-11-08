@@ -87,7 +87,7 @@ def build_app():
  run(['/usr/bin/codesign','--verify','--deep','--strict',app])
  link=staging/'Applications'
  if not link.exists():link.symlink_to('/Applications')
- (staging/'설치 안내.txt').write_text('Study Signal.app을 Applications 폴더로 옮겨 실행하세요.\nApple Silicon / macOS 15 이상용 개발 빌드입니다. Apple 공증은 포함하지 않습니다.\n상단 눈 모양 아이콘 → 설정에서 OpenRouter API 키를 입력하세요.\n⌘⇧Space 창 표시/숨김 · ⌘, 설정 · ⌘⇧Enter 음성(설정에서 별도 켜기)\n시선 모델은 연구·비상업용 라이선스입니다.\n')
+ (staging/'설치 안내.txt').write_text('Study Signal.app을 Applications 폴더로 옮겨 실행하세요.\nApple Silicon / macOS 15 이상용 개발 빌드입니다. Apple 공증은 포함하지 않습니다.\n상단 파형 시그널 아이콘 → 설정에서 OpenRouter API 키를 입력하세요.\n⌘⇧Space 창 표시/숨김 · ⌘, 설정 · ⌘⇧Enter 음성(설정에서 별도 켜기)\n시선 모델은 연구·비상업용 라이선스입니다.\n')
  return app,version
 
 def main():
