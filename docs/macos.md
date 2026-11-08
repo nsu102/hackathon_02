@@ -24,7 +24,7 @@ SVG 원본: `overlay/assets/StudySignalTemplate.svg`. macOS 표시에는 투명 
 
 ## v0.11 DMG 설치판
 
-`Study-Signal-0.11.2-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·가벼운 Python 백엔드를 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
+`Study-Signal-0.11.3-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·가벼운 Python 백엔드를 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
 
 설정은 **⌘,**(앱에 포커스가 있을 때) 또는 메뉴 막대 아이콘 → 설정에서 연다. OpenRouter 키를 입력하고 ‘저장 후 앱 다시 시작’을 누른다. 키 입력칸을 비우면 기존 키를 유지한다. 진행 중인 학습은 종료한 뒤 저장한다.
 
@@ -63,3 +63,5 @@ OpenRouter의 Gemini TTS를 기본으로 사용한다. 연결 키는 기존 키 
 ## 시선 감지 추가 설치
 
 기본 DMG에는 PyTorch·OpenCV·UniGaze 모델이 없다. 시선 기능은 별도 Study-Signal-Gaze-arm64-v1.zip을 다운로드하고 설정 → 시선 감지 설치…에서 선택해 설치한다. 진행률과 취소를 지원한다. 키/기록을 변경하지 않으며 설치된 구성 요소는 Application Support/Study Signal/components/gaze-v1에 남는다. 설치 후 감지 켜기를 눌러 카메라를 시작한다. [자세한 검증](optional-gaze.md)
+
+설정 셀렉트는 OS 기본 메뉴 대신 앱 공통 컴포넌트를 사용한다. 방향키/Home/End로 탐색하고 Enter로 선택, Escape로 취소한다. Cmd 단축키는 설정 선택에 가로채지 않는다.

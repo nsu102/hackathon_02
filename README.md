@@ -1,4 +1,4 @@
-# Study Signal v0.11.2 · 화면 번역과 스크래치패드
+# Study Signal v0.11.3 · 화면 번역과 스크래치패드
 
 좌상단 반투명 스크래치패드에 **화면 번역·요약·메모를 모읍니다**. 음성 단축키로 화면 내용을 질문하고 우하단 버블에서 답변을 확인하며 **화면 응시·이탈 상태**를 확인합니다. 텍스트 질문과 음성 질문을 작은 좌상단 채팅창에서 이어갑니다. 메뉴 막대의 파형 시그널 아이콘으로 설정을 엽니다.
 
@@ -10,7 +10,7 @@
 
 ## 실행과 사용
 
-Mac 설치판은 `Study-Signal-0.11.2-arm64.dmg`입니다. Apple Silicon·macOS 15 이상용으로 음성·번역용 기본 런타임을 포함하며 시선 모델과 PyTorch는 포함하지 않습니다. 기본 DMG는 약 168 MB이며 시선 기능은 나중에 선택 설치합니다. DMG의 앱을 Applications로 옮겨 실행하고, 메뉴 막대 아이콘 또는 ⌘,에서 API 키를 입력합니다. 설정·보정·기록은 앱 밖의 Application Support에 유지합니다. Apple 공증 전의 개발 빌드입니다. 자세한 내용은 [Mac 설치 안내](docs/macos.md)를 보세요.
+Mac 설치판은 `Study-Signal-0.11.3-arm64.dmg`입니다. Apple Silicon·macOS 15 이상용으로 음성·번역용 기본 런타임을 포함하며 시선 모델과 PyTorch는 포함하지 않습니다. 기본 DMG는 약 168 MB이며 시선 기능은 나중에 선택 설치합니다. DMG의 앱을 Applications로 옮겨 실행하고, 메뉴 막대 아이콘 또는 ⌘,에서 API 키를 입력합니다. 설정·보정·기록은 앱 밖의 Application Support에 유지합니다. Apple 공증 전의 개발 빌드입니다. 자세한 내용은 [Mac 설치 안내](docs/macos.md)를 보세요.
 
 아래는 소스에서 실행하는 방법입니다.
 
@@ -91,3 +91,5 @@ UniGaze-L 체크포인트는 선택 시선 패키지에만 포함되며 약 1.22
 개발용 배포 ZIP은 프로젝트에서 `python3 scripts/package_study.py`로 다시 만들 수 있습니다. 메뉴 아이콘 PNG 재생성은 Playwright 환경에서 `python3 scripts/render_tray.py`를 실행합니다.
 
 음성 읽기는 기본 `google/gemini-3.8-flash-tts` / Aoede입니다. 설정에서 목소리 선택·미리 듣기·Mac 기본 음성 전환을 할 수 있습니다. 버블의 **읽기 멈춤** 또는 새 질문 시작으로 재생을 멈춥니다. AI 음성은 읽을 문장을 기존 OpenRouter 계정으로 전송하며 별도 사용료가 발생합니다. 생성 음성은 디스크에 저장하지 않습니다.
+
+설정의 모든 셀렉트는 study-select.mjs 공통 컴포넌트를 사용한다. 어두운 팝업, 화살표 중앙 정렬, 키보드 탐색/선택·취소, 비활성 옵션, 모니터 목록 갱신을 지원하며 기존 설정 값과 이벤트를 그대로 사용한다. [UI 검증](docs/qa/study-select.json). 기존 로컬 심박 수집기의 /hr 응답과 선택 자동 연결도 지원한다. [심박 서버](docs/heart-server.md).

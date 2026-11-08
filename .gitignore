@@ -15,3 +15,6 @@ training/cache/
 .DS_Store
 
 adapters/
+
+.env.*
+!.env.example

@@ -36,14 +36,14 @@ async function startBackend() {
     try { await runFile(c, ['-c', 'import last_hour.study'], { cwd: root, timeout: 5000 }); python = c; break; } catch {}
   }
   if (!python) throw new Error('Python 3.11 이상이 필요해요.');
-  const configArgs=runtime.service?['--startup-config']:['-c','import os,json; from last_hour.config import load_env,DEFAULT_MODEL; load_env(); print(json.dumps({"token":os.getenv("LAST_HOUR_TOKEN", ""),"gaze_model":os.getenv("STUDY_GAZE_MODEL", "unigaze_l16_joint"),"key_configured":bool(os.getenv("OPENROUTER_API_KEY", "").strip()),"model":os.getenv("STUDY_MODEL_ID", "").strip() or os.getenv("OPENROUTER_MODEL",DEFAULT_MODEL)}))'];
+  const configArgs=runtime.service?['--startup-config']:['-c','import os,json; from last_hour.config import load_env,DEFAULT_MODEL; load_env(); print(json.dumps({"token":os.getenv("LAST_HOUR_TOKEN", ""),"heart_autoconnect":os.getenv("STUDY_HEART_AUTOCONNECT", "").lower() in {"1","true"},"gaze_model":os.getenv("STUDY_GAZE_MODEL", "unigaze_l16_joint"),"key_configured":bool(os.getenv("OPENROUTER_API_KEY", "").strip()),"model":os.getenv("STUDY_MODEL_ID", "").strip() or os.getenv("OPENROUTER_MODEL",DEFAULT_MODEL)}))'];
   const {stdout}=await runFile(python,configArgs,{cwd:root,timeout:15000});
   const startupConfig=JSON.parse(stdout);connectionSettings={key_configured:startupConfig.key_configured,model:startupConfig.model};token=startupConfig.token;neuralWorker.setModel(startupConfig.gaze_model); if (token.length < 24) throw new Error('.env의 로컬 연결 토큰을 확인해주세요.');
   const port = await new Promise((resolve, reject) => { const s = net.createServer(); s.once('error', reject); s.listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => resolve(p)); }); });
   endpoint = `http://127.0.0.1:${port}`;
   child = spawn(python, [...(runtime.service?[]:['-m','last_hour']),'serve','--port',String(port)], { cwd: root, stdio: ['ignore', 'ignore', 'pipe'], env: { ...process.env, ...(qaData?{LAST_HOUR_DATA:path.join(qaData,'data')}:{}), PYTHONUNBUFFERED: '1' } });
   child.stderr.on('data', () => {}); child.on('exit', () => { child = null; if (!quitting) win?.webContents.send('backend:lost'); });
-  for (let i = 0; i < 60; i++) { try { return await api('GET', '/health'); } catch {} if (!child) break; await new Promise(r => setTimeout(r, 150)); }
+  for (let i = 0; i < 60; i++) { try { const health=await api('GET','/health');if(startupConfig.heart_autoconnect)await api('POST','/study/heart/connect',{}).catch(()=>{});return health; } catch {} if (!child) break; await new Promise(r => setTimeout(r, 150)); }
   throw new Error('학습 서버를 시작하지 못했어요.');
 }
 ipcMain.handle('backend:ready', async e => { validSender(e); return readiness; });

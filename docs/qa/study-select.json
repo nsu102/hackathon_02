@@ -1,0 +1,20 @@
+{
+  "passed": [
+    "all selects enhanced",
+    "pointer choice updates existing change handler once",
+    "keyboard navigation and commit",
+    "Escape cancels",
+    "outside click closes",
+    "disabled option skipped",
+    "programmatic value sync",
+    "disabled state sync",
+    "dynamic options sync",
+    "chevrons vertically centered and equally inset",
+    "dark themed popup",
+    "global command shortcuts do not change selection",
+    "Tab closes",
+    "popup stays in viewport",
+    "380px no overflow"
+  ],
+  "page_errors": []
+}

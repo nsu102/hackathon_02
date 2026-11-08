@@ -31,7 +31,7 @@ def parse_sample(value, now):
         raise ValueError("An ISO 8601 timestamp with timezone is required") from None
     if not -10 <= now - at <= 60:
         raise ValueError("Stale or future sample")
-    if value["source"] not in {"apple_watch", "demo"}:
+    if value["source"] not in {"apple_watch", "demo", "collector"}:
         raise ValueError("Unknown heart rate source")
     if not isinstance(value["sample_id"], str) or not 1 <= len(value["sample_id"]) <= 128:
         raise ValueError("Invalid sample id")
@@ -47,6 +47,7 @@ class HeartRateFeed:
         self.stop_event = threading.Event()
         self.message = "심박 서버 미연결"
         self.running = False
+        self.legacy = None
 
     def accept(self, value):
         sample, at = parse_sample(value, self.clock())
@@ -58,7 +59,7 @@ class HeartRateFeed:
             if self.samples and at < self.samples[-1]["at"]:
                 return False
             self.samples.append({**sample, "at": at})
-            self.message = "데모 서버 신호" if sample["source"] == "demo" else "Apple Watch · 서버 수신"
+            self.message = "데모 서버 신호" if sample["source"] == "demo" else "심박 서버 수신 · 장치 출처 미표기" if sample["source"] == "collector" else "Apple Watch · 서버 수신"
             return True
 
     def status(self):
@@ -83,7 +84,25 @@ class HeartRateFeed:
             raw = response.read(4097)
         if len(raw) > 4096:
             raise ValueError("Heart response too large")
-        return json.loads(raw)
+        value = json.loads(raw)
+        parsed = urlsplit(url)
+        if parsed.hostname in {'localhost','127.0.0.1'} and parsed.path=='/hr' and isinstance(value,dict) and set(value)=={'bpm','age'}:
+            return self.normalize_local_collector(value)
+        return value
+
+    def normalize_local_collector(self, value):
+        # This collector exposes receipt age, not a Watch measurement ID/time.
+        # Cache the inferred receipt instant so polling never refreshes an old reading.
+        if value['bpm'] is None and value['age'] is None:return {'status':'waiting'}
+        age=value['age'];bpm=value['bpm']
+        if type(age) not in (int,float) or not math.isfinite(age) or age<0:raise ValueError('Invalid collector age')
+        if type(bpm) not in (int,float) or not math.isfinite(bpm) or not 20<=bpm<=250:raise ValueError('Invalid collector bpm')
+        if age>60:return {'status':'stale'}
+        at=self.clock()-age
+        if self.legacy and self.legacy['bpm']==bpm and abs(self.legacy['at']-at)<=.5:return dict(self.legacy['sample'])
+        sample={'bpm':bpm,'timestamp':datetime.fromtimestamp(at,timezone.utc).isoformat(),'source':'collector','sample_id':f'collector-{at:.3f}-{bpm}'}
+        self.legacy={'bpm':bpm,'at':at,'sample':sample}
+        return sample
 
     def start(self):
         url = os.getenv("STUDY_HEART_URL", "").strip()
@@ -103,14 +122,16 @@ class HeartRateFeed:
             stop_event = self.stop_event
             self.message = "심박 서버 응답 대기"
             self.samples.clear()
+            self.legacy=None
             def poll():
                 while not stop_event.is_set():
                     try:
                         value = (self.fetch or self._read)(url, token)
                         if stop_event.is_set():
                             return
-                        if not (isinstance(value, dict) and value.get("status") == "waiting"):
-                            self.accept(value)
+                        if isinstance(value,dict) and value.get('status') in {'waiting','stale'}:
+                            with self.lock:self.message='심박 측정값 대기 중' if value['status']=='waiting' else '심박 데이터가 오래됐어요'
+                        else:self.accept(value)
                     except Exception:
                         with self.lock:
                             self.message = "심박 서버 연결·인증·데이터 형식을 확인해주세요"
@@ -125,6 +146,7 @@ class HeartRateFeed:
             self.stop_event.set()
             self.message = "심박 서버 미연결"
             self.samples.clear()
+            self.legacy=None
 
 
 class HeartRelay:

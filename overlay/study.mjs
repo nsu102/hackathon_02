@@ -1,3 +1,4 @@
+import {enhanceSelects} from './study-select.mjs';
 import { setupGaze } from './gaze-ui.mjs';
 import {FocusController} from './focus.mjs';
 import {setupVoice} from './voice-ui.mjs';
@@ -140,3 +141,5 @@ bridge.onLost(()=>{voice.stop();ready=false;$('start').disabled=true;$('start').
 (async()=>{try{const v=await bridge.ready();if(!v?.ok)throw new Error(v?.message||'연결 실패');ready=true;syncPad();planner.restore();$('start').disabled=false;$('start').textContent='학습 시작';$('connection').textContent=v.health.study_model.configured?'AI 연결됨':'AI 연결 설정 필요';bubbleConfigured=Boolean(v.health.study_model.configured);bridge.window('scratchpad-show').catch(()=>{});if(!bubbleConfigured)$('ai').checked=false;else voice.initializeShortcut();}catch(e){$('start').textContent='연결 확인 필요';error(e.message);}})();
 setInterval(async()=>{clock();if(!ready)return;try{if(session&&session.status!=='ended')render(await bridge.request('GET',`/study/sessions/${session.id}`));else heart(await bridge.request('GET','/study/heart'));}catch{}},2000);
 window.addEventListener('beforeunload',()=>{voice.stop();tracker.stop();});
+
+enhanceSelects();

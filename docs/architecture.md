@@ -50,3 +50,5 @@ index.html과 scratchpad.html은 study-theme.css를 공유한다. study-opacity 
 앱의 gaze-installer.cjs는 네이티브 선택 파일을 고정 manifest의 크기·SHA-256으로 확인하도록 core의 install-gaze를 실행한다. gaze_install.py는 경로·링크·파일 수·압축 해제 크기를 검사하고 같은 파일시스템의 임시 폴더에서 실행 환경을 검증한 뒤 원자적으로 교체한다. 실패/취소는 임시 폴더를 제거하며 기존 학습 데이터와 설정을 건드리지 않는다.
 
 설치 상태 확인은 작은 marker/파일 존재 확인이며 대용량 모델을 읽지 않는다. 미설치 상태에서는 startStudy가 카메라 준비를 건너뛴다. 설치 완료 자체로 카메라/모델을 실행하지 않는다.
+
+StudySelect는 native select를 비표시 데이터 모델로 유지하고 button[role=combobox]/portal listbox로 렌더링한다. value 대입·change/input·옵션/disabled 변경을 동기화하며 모든 기존 설정 코드를 유지한다. 로컬 /hr 호환은 HeartRateFeed의 메모리 어댑터에서 수신 나이를 보존해 collector 출처로 처리한다. 실제 Watch 측정 시각이라고 주장하지 않는다.

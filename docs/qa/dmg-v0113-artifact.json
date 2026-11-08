@@ -1,0 +1,14 @@
+{
+  "file": "Study-Signal-0.11.3-arm64.dmg",
+  "bytes": 168222814,
+  "sha256": "258bc55b07beb7a03c644d64d66ace08f299c741ce83f360a89940de19a1e34e",
+  "hdiutil_checksum": "VALID",
+  "codesign": "ad-hoc; deep strict verified",
+  "notarized": false,
+  "architecture": "arm64",
+  "select_count": 7,
+  "custom_select_ui_scenarios": 15,
+  "heart_local_collector_supported": true,
+  "live_app_heart_connection_verified": true,
+  "raw_heart_values_saved_to_report": false
+}

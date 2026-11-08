@@ -9,7 +9,7 @@ def main():
  from last_hour.config import load_env,DEFAULT_MODEL
  load_env()
  if sys.argv[1:]==['--startup-config']:
-  print(json.dumps({'token':os.getenv('LAST_HOUR_TOKEN',''),'gaze_model':os.getenv('STUDY_GAZE_MODEL','unigaze_l16_joint'),'key_configured':bool(os.getenv('OPENROUTER_API_KEY','').strip()),'model':os.getenv('STUDY_MODEL_ID','').strip() or os.getenv('OPENROUTER_MODEL',DEFAULT_MODEL)}));return 0
+  print(json.dumps({'token':os.getenv('LAST_HOUR_TOKEN',''),'heart_autoconnect':os.getenv('STUDY_HEART_AUTOCONNECT','').lower() in {'1','true'},'gaze_model':os.getenv('STUDY_GAZE_MODEL','unigaze_l16_joint'),'key_configured':bool(os.getenv('OPENROUTER_API_KEY','').strip()),'model':os.getenv('STUDY_MODEL_ID','').strip() or os.getenv('OPENROUTER_MODEL',DEFAULT_MODEL)}));return 0
  parser=argparse.ArgumentParser();sub=parser.add_subparsers(dest='command',required=True)
  serve=sub.add_parser('serve');serve.add_argument('--port',type=int,required=True)
  material=sub.add_parser('extract-material');material.add_argument('path')
