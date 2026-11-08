@@ -6,7 +6,7 @@ target=project.parent/'study-signal.zip'
 with ZipFile(target,'w',ZIP_DEFLATED,compresslevel=7) as archive:
  for file in sorted(project.rglob('*')):
   relative=file.relative_to(project)
-  if not file.is_file() or any(p in {'node_modules','data','__pycache__','.venv','.gaze-venv','.git','.taste-skill','.build'} for p in relative.parts):continue
+  if not file.is_file() or any(p in {'node_modules','data','__pycache__','.venv','.gaze-venv','.git','.vercel','.taste-skill','.build'} for p in relative.parts):continue
   if file.suffix in {'.zip','.dmg','.pyc','.private'} or file.name=='.DS_Store' or (file.name.startswith('.env') and file.name!='.env.example'):continue
   archive.write(file,Path('study-signal')/relative)
 with ZipFile(target) as archive:

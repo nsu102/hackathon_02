@@ -28,4 +28,4 @@ The 8s/20s facts are the app's default reminder settings, not measured accuracy 
 - Static lime lighting, quiet button hover/press, full screenshot dialog, English setup/privacy notes.
 - No invented ratings, testimonials, users, performance statistics, pricing, or accounts.
 
-`index.html`, `product.css`, and `product.mjs` make up the introduction. `setup.html` explains the prototype and data handling. `study-signal.zip` contains desktop source. This page has not been published to external hosting.
+`index.html`, `product.css`, and `product.mjs` make up the introduction. `setup.html` explains the prototype and data handling. `study-signal.zip` contains desktop source. Hosting configuration is maintained separately from the desktop installer.

@@ -1,4 +1,4 @@
-# Study Signal v0.6 구조
+# Study Signal v0.8 구조
 
 ```
 카메라 → MediaPipe 얼굴 정렬 → 같은 Mac의 UniGaze-L/MPS 워커
@@ -9,7 +9,7 @@
 
 말하기 버튼 또는 선택 단축키 → native 고정 캡처(자체 창 숨김)
   → WebM/Opus → 명시적 보내기 → 전체 선택 모니터 또는 수동 크롭
-  → 로컬 context-help → OpenRouter STT → 기존 Vision 설명 → 대화/OS 음성
+  → 로컬 context-help → OpenRouter STT → 기존 Vision 설명 → 별도 우하단 버블/OS 음성
 
 메뉴 막대 Tray → 제한된 app:action → 설정/감지/음소거/휴식
 ```
@@ -25,4 +25,8 @@
 Watch 수집 서버는 별도 경로다. 원격 GPU·SSH·파인튜닝은 사용하지 않는다. API 키·로컬 인증 토큰은 main/서버에만 두고 renderer에 노출하지 않는다.
 
 
-v0.7 설치판: `runtime.cjs`가 앱 리소스(서비스·모델)와 쓰기 가능한 Application Support(개인 .env·기록·Chromium 저장소)를 분리한다. `scripts/bundled_service.py`는 PyInstaller 독립 바이너리 진입점이다. OpenRouter용 공개 CA 인증서와 Torchvision stable 연산 파일을 포함한다. `connection-ui.mjs`는 공개 연결 상태만 읽고, 입력한 키는 저장 IPC 후 비우며 localStorage에 저장하지 않는다. DMG 빌드는 개인 .env·기록을 복사하지 않는다.
+v0.8 설치판: `runtime.cjs`가 앱 리소스(서비스·모델)와 쓰기 가능한 Application Support(개인 .env·기록·Chromium 저장소)를 분리한다. `scripts/bundled_service.py`는 PyInstaller 독립 바이너리 진입점이다. OpenRouter용 공개 CA 인증서와 Torchvision stable 연산 파일을 포함한다. `connection-ui.mjs`는 공개 연결 상태만 읽고, 입력한 키는 저장 IPC 후 비우며 localStorage에 저장하지 않는다. DMG 빌드는 개인 .env·기록을 복사하지 않는다.
+
+`bubbles.cjs`는 focusable=false 투명 창을 선택 모니터 workArea 우하단에 둔다. `bubble-preload.cjs`는 고정 동작과 높이 변경만 전달한다. 캡처 중 suppress와 자체 창 숨김으로 버블이 이미지에 들어가지 않게 한다. 큰 창은 설정·기록·자료 관리용이다.
+
+자료 선택 → frozen `extract-material` → `materials.py` 로컬 추출 → `materials-ui.mjs` 로컬 텍스트 보관 → `/study/sessions/:id/materials` 세션 갱신. 질문 시작 때 세션 자료를 복사해 전사 문장·고정 캡처와 함께 Vision 모델에 전달한다. 원본 파일은 서버에 복사하지 않는다.

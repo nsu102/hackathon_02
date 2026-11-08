@@ -1,4 +1,4 @@
-> v0.6 UI는 음성 질문만 사용합니다. 기존 텍스트 API는 호환용입니다. 기본 voice target은 screen이며 보정 없이 선택 모니터 전체를 사용합니다.
+> v0.8 UI는 음성 질문만 사용합니다. 기존 텍스트 API는 호환용입니다. 기본 voice target은 screen이며 보정 없이 선택 모니터 전체를 사용합니다.
 
 # 학습 API 계약
 
@@ -11,6 +11,7 @@ Python 표준 라이브러리 서버입니다. `python3 -m last_hour serve --por
 | GET `/health` | `study_model: {provider, model, configured}` — 설정 존재이며 연결 성공 보장은 아님 |
 | POST `/study/sessions` | `{goal, material, minutes:20, ai_enabled:true}` → 세션 스냅샷 |
 | GET `/study/sessions/:id` | 시간·상태·심박·최근 대화·개인화·요약 |
+| POST `/study/sessions/:id/materials` | `{material:"..."}` → 갱신 세션. 최대 30,000자, 종료/요청 중 거절 |
 | POST `/study/sessions/:id/assist` | `{mode:"hint"|"explain"|"quiz"|"chat", message:"..."}` → 실제 또는 데모 답변 |
 | POST `/study/sessions/:id/checkins` | `{state:"okay"|"thinking"|"stuck"|"tired"}` — 사용자가 확인한 상태 |
 | POST `/study/sessions/:id/pause` | `{paused:true}` 또는 `{paused:false}` |
@@ -65,7 +66,7 @@ Python 표준 라이브러리 서버입니다. `python3 -m last_hour serve --por
 
 본문 상한은 15MB, 오디오 원본 2MB, PNG 원본 6MB, 화면 한 변 32~8192px입니다. 녹음은 250ms~20초입니다. 로컬 RMS 음성 활동·동의·WebM 서명·PNG IHDR 크기를 검사합니다. 유효한 진행 중 AI 세션에서만 전사합니다. 전사 오류·빈 발화·대표적인 무음 상투문 응답이면 Vision을 호출하지 않습니다. `speech_detected`는 로컬 음성 활동 게이트이며 인간 발화를 보증하는 인증 수단은 아닙니다.
 
-서버→OpenRouter 전사 요청은 `/audio/transcriptions`에 `{model:STUDY_STT_MODEL,input_audio:{data,format:"webm"},language:"ko",response_format:"json"}`입니다. 채팅용 reasoning/provider 매개변수를 재사용하지 않습니다. 전사 뒤 기존 설명 모델에 텍스트＋이미지를 보냅니다. [공식 STT 문서](https://openrouter.ai/docs/guides/overview/multimodal/stt)
+서버→OpenRouter 전사 요청은 `/audio/transcriptions`에 `{model:STUDY_STT_MODEL,input_audio:{data,format:"webm"},language:"ko",response_format:"json"}`입니다. 채팅용 reasoning/provider 매개변수를 재사용하지 않습니다. 전사 뒤 기존 설명 모델에 전사문＋고정 이미지＋세션 첨부 자료를 보냅니다. [공식 STT 문서](https://openrouter.ai/docs/guides/overview/multimodal/stt)
 
 응답은 `{transcript,message}`이며 message는 `content,question,answer` 등을 포함합니다. 전사문과 답변은 세션 기록에 남지만 녹음·PNG·이미지 프롬프트는 기본 로그·학습 내보내기에 저장하지 않습니다. `training_eligible:false` 답변은 동의 체크가 있어도 내보내지 않습니다. 잘못된 입력은 HTTP 400, 공급자 오류는 내용이 정제된 HTTP 502입니다.
 

@@ -1,0 +1,36 @@
+{
+  "service": "study-service",
+  "architecture": "arm64",
+  "external_python_on_path": false,
+  "self_check": {
+    "ok": true,
+    "frozen": true,
+    "python": "3.13.7",
+    "mps": true,
+    "torch": "2.15.0",
+    "timm": "1.0.31",
+    "opencv": "5.0.0"
+  },
+  "neural_ready": {
+    "ready": true,
+    "model": "unigaze_l16_joint",
+    "device": "mps",
+    "precision": "float16",
+    "source": "https://github.com/ut-vision/UniGaze",
+    "screen_calibration_required": true
+  },
+  "pdf_material": {
+    "name": "reference-notes.pdf",
+    "pages": 1,
+    "contains_reference_code": true
+  },
+  "health": {
+    "version": "0.4",
+    "study_model": {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-5.5",
+      "configured": true
+    }
+  },
+  "private_data_embedded": false
+}

@@ -1,0 +1,30 @@
+{
+  "source": "read-only mounted v0.8 DMG; no OS permission changes",
+  "native_windows": [
+    {
+      "component": "study-bubble",
+      "bounds": {
+        "x": 1080,
+        "y": 651,
+        "width": 370,
+        "height": 210
+      },
+      "focusable": false,
+      "visible": true
+    },
+    {
+      "component": "study-menu-bar",
+      "bounds": {
+        "x": 739,
+        "y": 0,
+        "width": 32,
+        "height": 37
+      },
+      "template": true,
+      "scales": [
+        1,
+        2
+      ]
+    }
+  ]
+}

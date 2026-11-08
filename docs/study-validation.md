@@ -1,3 +1,5 @@
+> 최신 v0.8 결과는 [시나리오 검증](qa-v08.md)을 참고하세요. 아래 기록은 버전별 이력입니다.
+
 # Study Signal v0.4 검증 기록
 
 2026-11-07 · macOS · Electron 45.2.3 · MediaPipe Tasks Vision 1.2.2 · uiohook-napi 1.5.5. **소프트웨어 구현과 실제 사람/OS 시험을 분리합니다.**

@@ -1,0 +1,58 @@
+[
+  {
+    "viewport": 1440,
+    "page": "index.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 1440,
+    "page": "setup.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 1024,
+    "page": "index.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 1024,
+    "page": "setup.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 768,
+    "page": "index.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 768,
+    "page": "setup.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 390,
+    "page": "index.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  },
+  {
+    "viewport": 390,
+    "page": "setup.html",
+    "no_overflow": true,
+    "images_loaded": true,
+    "page_errors": []
+  }
+]
