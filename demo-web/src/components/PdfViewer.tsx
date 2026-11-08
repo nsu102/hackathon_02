@@ -1,5 +1,5 @@
 "use client";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 
 export type PdfViewerHandle = { scrollToPage: (page: number) => void };
@@ -11,6 +11,8 @@ export const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({
   const [width, setWidth] = useState(0);
   const [ratio, setRatio] = useState(1.414);
   const [flash, setFlash] = useState<number | null>(null);
+  /** 폭이 바뀌기 직전에 읽던 위치(쪽 번호 + 그 쪽 안에서의 비율) */
+  const anchor = useRef<{ page: number; at: number } | null>(null);
   const pages = Array.from({ length: doc.numPages }, (_, i) => i + 1);
 
   useImperativeHandle(ref, () => ({
@@ -33,10 +35,30 @@ export const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({
   useEffect(() => {
     const el = scroller.current;
     if (!el) return;
-    const ro = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
+    let timer = 0;
+    // 체크리스트를 접고 펼치는 동안에는 기다렸다가 한 번만 다시 그린다.
+    const ro = new ResizeObserver(([entry]) => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const next = Math.round(entry.contentRect.width);
+        const pageEls = [...el.querySelectorAll<HTMLElement>("[data-page]")];
+        const current = pageEls.find((p) => p.offsetTop + p.offsetHeight > el.scrollTop);
+        if (current) anchor.current = { page: Number(current.dataset.page), at: (el.scrollTop - current.offsetTop) / Math.max(1, current.offsetHeight) };
+        setWidth((w) => (w === next ? w : next));
+      }, 140);
+    });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => { clearTimeout(timer); ro.disconnect(); };
   }, []);
+
+  // 폭이 바뀌어 쪽 높이가 달라져도 읽던 자리를 그대로 보여준다.
+  useLayoutEffect(() => {
+    const root = scroller.current, a = anchor.current;
+    anchor.current = null;
+    if (!root || !a) return;
+    const el = root.querySelector<HTMLElement>(`[data-page="${a.page}"]`);
+    if (el) root.scrollTop = el.offsetTop + a.at * el.offsetHeight;
+  }, [width]);
 
   // 가장 많이 보이는 쪽 = 지금 읽는 쪽
   useEffect(() => {
@@ -53,12 +75,13 @@ export const PdfViewer = forwardRef<PdfViewerHandle, Props>(function PdfViewer({
     return () => io.disconnect();
   }, [doc, onPageChange]);
 
-  const pageWidth = Math.max(0, width - 32);
+  // 쪽은 열 너비를 꽉 채운다(너무 넓은 화면에서는 1600px까지).
+  const pageWidth = Math.min(Math.max(0, width - 24), 1600);
   return (
-    <div ref={scroller} className="h-full overflow-y-auto overscroll-contain px-4 py-4" aria-label="PDF 보기">
-      <div className="mx-auto flex max-w-[880px] flex-col gap-4">
+    <div ref={scroller} className="relative h-full overflow-y-auto overscroll-contain px-3 py-3" aria-label="PDF 보기">
+      <div className="mx-auto flex max-w-[1600px] flex-col items-center gap-3">
         {pages.map((n) => (
-          <Page key={n} doc={doc} page={n} width={Math.min(pageWidth, 880)} ratio={ratio} root={scroller} flash={flash === n} />
+          <Page key={n} doc={doc} page={n} width={pageWidth} ratio={ratio} root={scroller} flash={flash === n} />
         ))}
       </div>
     </div>
@@ -69,7 +92,7 @@ function Page({ doc, page, width, ratio, root, flash }: { doc: PDFDocumentProxy;
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [near, setNear] = useState(false);
-  const [height, setHeight] = useState<number | null>(null);
+  const [ownRatio, setOwnRatio] = useState<number | null>(null);
 
   useEffect(() => {
     const el = box.current;
@@ -92,7 +115,7 @@ function Page({ doc, page, width, ratio, root, flash }: { doc: PDFDocumentProxy;
       const c = canvas.current;
       c.width = Math.floor(viewport.width);
       c.height = Math.floor(viewport.height);
-      setHeight(Math.round(viewport.height / dpr));
+      setOwnRatio(base.height / base.width);
       task = p.render({ canvas: c, viewport });
       await task.promise.catch(() => {});
     })();
@@ -104,7 +127,7 @@ function Page({ doc, page, width, ratio, root, flash }: { doc: PDFDocumentProxy;
       ref={box}
       data-page={page}
       className={`relative overflow-hidden rounded-lg bg-white shadow-[0_18px_40px_-20px_rgb(0_0_0/0.8)] ring-2 transition-[box-shadow] duration-500 ${flash ? "ring-lime" : "ring-transparent"}`}
-      style={{ width: width || "100%", height: height ?? (width ? width * ratio : undefined), aspectRatio: width ? undefined : `1 / ${ratio}` }}
+      style={{ width: width || "100%", height: width ? Math.round(width * (ownRatio ?? ratio)) : undefined, aspectRatio: width ? undefined : `1 / ${ratio}` }}
     >
       <canvas ref={canvas} className="block h-full w-full" aria-label={`${page}쪽`} />
       <span className="absolute right-2 bottom-2 rounded-full bg-night/70 px-2 py-0.5 text-[11px] text-body">{page}</span>
