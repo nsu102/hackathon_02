@@ -60,7 +60,7 @@ def build_app():
  assert not list(front.glob('qa-*'))
  modules=front/'node_modules';modules.mkdir()
  # Current UI dependencies; experimental ONNX modules have no role in this build.
- for name in ['@mediapipe','@fontsource','uiohook-napi','node-gyp-build']:
+ for name in ['@mediapipe','@fontsource']:
   shutil.copytree(ROOT/'overlay/node_modules'/name,modules/name,symlinks=True)
  shutil.copytree(BUILD/'core-service-dist/study-service',resources/'service',symlinks=True)
  shutil.copy2(BUILD/'gaze-addon.json',resources/'gaze-addon.json')
@@ -70,7 +70,7 @@ def build_app():
  version=json.loads((ROOT/'overlay/package.json').read_text())['version']
  with (contents/'Info.plist').open('rb') as f:info=plistlib.load(f)
  executable=contents/'MacOS'/info['CFBundleExecutable'];executable.rename(contents/'MacOS'/'StudySignal')
- info.update(CFBundleExecutable='StudySignal',CFBundleName='Study Signal',CFBundleDisplayName='Study Signal',CFBundleIdentifier='dev.studysignal.mac',CFBundleShortVersionString=version,CFBundleVersion=version,CFBundleIconFile='StudySignal.icns',LSMinimumSystemVersion='15.0',LSApplicationCategoryType='public.app-category.education',NSCameraUsageDescription='화면 응시와 이탈을 이 Mac에서 감지합니다. 얼굴 영상은 서버로 전송하지 않습니다.',NSMicrophoneUsageDescription='단축키를 누르는 동안 녹음한 학습 질문을 전사합니다.',NSScreenCaptureUsageDescription='질문을 시작할 때의 선택 모니터 화면을 AI 설명에 사용합니다.',NSCameraUseContinuityCameraDeviceType=True)
+ info.update(CFBundleExecutable='StudySignal',CFBundleName='Study Signal',CFBundleDisplayName='Study Signal',CFBundleIdentifier='dev.studysignal.mac',CFBundleShortVersionString=version,CFBundleVersion=version,CFBundleIconFile='StudySignal.icns',LSMinimumSystemVersion='15.0',LSApplicationCategoryType='public.app-category.education',NSCameraUsageDescription='화면 응시와 이탈을 이 Mac에서 감지합니다. 얼굴 영상은 서버로 전송하지 않습니다.',NSMicrophoneUsageDescription='말하기 버튼으로 녹음한 학습 질문을 전사합니다.',NSScreenCaptureUsageDescription='질문을 시작할 때의 선택 모니터 화면을 AI 설명에 사용합니다.',NSCameraUseContinuityCameraDeviceType=True)
  with (contents/'Info.plist').open('wb') as f:plistlib.dump(info,f)
  for p in (contents/'Frameworks').glob('Electron Helper*.app/Contents/Info.plist'):
   with p.open('rb') as f:helper=plistlib.load(f)
@@ -88,7 +88,7 @@ def build_app():
  run(['/usr/bin/codesign','--verify','--deep','--strict',app])
  link=staging/'Applications'
  if not link.exists():link.symlink_to('/Applications')
- (staging/'설치 안내.txt').write_text('Study Signal.app을 Applications 폴더로 옮겨 실행하세요.\nApple Silicon / macOS 15 이상용 개발 빌드입니다. Apple 공증은 포함하지 않습니다.\n상단 파형 시그널 아이콘 → 설정에서 OpenRouter API 키를 입력하세요.\n⌘⇧Space 창 표시/숨김 · ⌘, 설정 · ⌘⇧Enter 음성(설정에서 별도 켜기)\n시선 감지는 선택 설치입니다. 설정에서 별도 시선 패키지 ZIP을 선택해 설치하세요.\n시선 모델은 연구·비상업용 라이선스입니다.\n')
+ (staging/'설치 안내.txt').write_text('Study Signal.app을 Applications 폴더로 옮겨 실행하세요.\nApple Silicon / macOS 15 이상용 개발 빌드입니다. Apple 공증은 포함하지 않습니다.\n상단 파형 시그널 아이콘 → 설정에서 OpenRouter API 키를 입력하세요.\n⌘⇧Space 창 표시/숨김 · ⌘, 설정 · 음성은 앱의 말하기/보내기 버튼 사용\n시선 감지는 선택 설치입니다. 설정에서 별도 시선 패키지 ZIP을 선택해 설치하세요.\n시선 모델은 연구·비상업용 라이선스입니다.\n')
  return app,version
 
 def main():

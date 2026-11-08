@@ -1,13 +1,13 @@
 {
   "passed": [
-    "no talk button or consent form",
-    "cancel held recording",
-    "recording and attached screenshot",
-    "PIM answer and history",
-    "focus grace action",
-    "untrusted text stays text",
+    "red alert dialog",
+    "no conversation or recording controls",
+    "focus grace",
+    "false alarm correction",
+    "settings action",
+    "dismiss action",
     "370px no horizontal overflow",
-    "stop generated speech"
+    "untrusted text stays text"
   ],
   "page_errors": []
 }

@@ -1,7 +1,7 @@
 {
   "passed": [
     "failed query expands error and permits retry",
-    "340x116 initial compact composer",
+    "340x148 compact chat with clock and heart rate",
     "no empty heading or pin/upload controls",
     "typed query expands",
     "question displayed with pending reply",

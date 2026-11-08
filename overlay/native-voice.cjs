@@ -39,7 +39,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   const id=hold.start();if(id===null)return false;control=input;onStart();
   timer=setTimeout(()=>cancel('화면 캡처가 10초 안에 준비되지 않았어요. 앱을 다시 시작한 뒤 시도해주세요.'),10000);
   const candidate=buffer.freeze(now()),gaze=candidate&&String(candidate.display_id)===String(display()?.id)?candidate:null;
-  capturing=true;try{const frame=await capture();if(hold.id!==id||!hold.ready(id))return false;clearTimeout(timer);timer=setTimeout(()=>cancel('20초 제한 또는 키 해제 신호 누락으로 녹음을 폐기했어요.'),20000);frozen={...frame,gaze,id,target};send('start',{id,control:input,attachment:{display_id:frame.display.display_id,...frame.image.getSize()}});return true;}
+  capturing=true;try{const frame=await capture();if(hold.id!==id||!hold.ready(id))return false;clearTimeout(timer);timer=setTimeout(()=>cancel('20초가 지나 녹음을 폐기했어요. 다시 말하기를 눌러주세요.'),20000);frozen={...frame,gaze,id,target};send('start',{id,control:input,attachment:{display_id:frame.display.display_id,...frame.image.getSize()}});return true;}
   catch(e){if(hold.id===id){cancel(e.message);if(input==='hotkey')send('failure',e.message);}if(input==='button')throw e;return false;}finally{capturing=false;}
  }
  async function buttonStart(data){
@@ -81,7 +81,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   return {capture:{png:bytes.toString('base64'),width:size.width,height:size.height,display_id:frame.display.display_id,captured_at_ms:frame.captured_at_ms},target:{selection,calibration_id:selection==='gaze'?frame.gaze.calibration_id:null}};
  }
  async function submit(data){
-  if(!frozen||data.id!==frozen.id||hold.state!=='released'||uploading)throw new Error('키 해제가 확인되지 않아 전송하지 않았어요.');
+  if(!frozen||data.id!==frozen.id||hold.state!=='released'||uploading)throw new Error('보내기 동작이 확인되지 않아 전송하지 않았어요.');
   clearTimeout(timer);hold.done();
   if(data.speech_detected!==true){frozen=null;throw new Error('질문 음성이 들리지 않았어요.');}
   if(process.platform==='darwin'&&(systemPreferences.getMediaAccessStatus('microphone')!=='granted'||systemPreferences.getMediaAccessStatus('screen')!=='granted'||control==='hotkey'&&!systemPreferences.isTrustedAccessibilityClient(false))){frozen=null;throw new Error('마이크·화면 또는 키 감지 권한이 철회되어 녹음을 폐기했어요.');}
@@ -106,7 +106,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
  // Text questions share the same local capture boundary, without microphone/key-hook access.
  async function screenPrepare(data){
   if(!session||uploading||manual||frozen||screenPending||hold.state!=='idle')throw new Error('진행 중인 AI 학습에서 질문을 하나씩 보내주세요.');
-  if(data?.consent!==true)throw new Error('선택 화면을 OpenRouter로 보내는 데 동의해주세요.');
+  if(data?.consent!==true)throw new Error('현재 화면을 OpenRouter로 보내는 데 동의해주세요.');
   if(typeof data.message!=='string'||!data.message.trim()||data.message.length>4000)throw new Error('질문은 1~4,000자로 입력해주세요.');
   const current=epoch,id=session,candidate=buffer.freeze(now());
   const pending={message:data.message.trim(),session:id};screenPending=pending;
@@ -118,7 +118,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
    const radius=gaze?Math.max(240,gaze.error_px*2):0;
    const initial=gaze?{x:Math.max(frame.display.x,gaze.x-radius),y:Math.max(frame.display.y,gaze.y-150),width:radius*2,height:300}:null;
    timer=setTimeout(()=>{if(screenPending===pending)screenPending=null;},60000);
-   return {png:frame.image.toDataURL(),display:frame.display,initial};
+   return {display:frame.display};
   }catch(e){if(screenPending===pending)screenPending=null;throw e;}
  }
  async function screenSubmit(rect){
@@ -126,7 +126,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   if(!pending?.frame||Date.now()>pending.expires||session!==pending.session||uploading)throw new Error('화면 질문을 다시 시작해주세요.');
   screenPending=null;clearTimeout(timer);
   if(process.platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')!=='granted')throw new Error('화면 권한이 철회되어 캡처를 폐기했어요.');
-  const body={...payloadFrame(pending.frame,rect,'manual'),message:pending.message,consent:true};
+  const body={...payloadFrame(pending.frame,pending.frame.display,'screen'),message:pending.message,consent:true};
   const current=epoch;uploading=true;
   try{
    const result=await api('POST',`/study/sessions/${pending.session}/screen-help`,body);

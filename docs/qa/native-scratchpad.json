@@ -1,18 +1,24 @@
 {
   "environment": "native Electron; isolated pad; authored text; no external request",
-  "packaged": false,
+  "packaged": true,
   "compact_bounds": {
     "width": 340,
-    "height": 116
+    "height": 148
   },
   "expanded_bounds": {
     "width": 400,
-    "height": 520
+    "height": 560
   },
   "typed_query_reaches_consent_gate": true,
   "voice_request_expands": true,
   "collapse_retains_history": true,
   "reload_restores_compact": true,
   "shared_opacity": true,
-  "physical_microphone_tested": false
+  "physical_microphone_tested": false,
+  "click_only_voice": true,
+  "voice_hotkey_registered": false,
+  "automatic_screenshot": true,
+  "speech_default_off": true,
+  "heart_and_clock_visible": true,
+  "warning_dialog_does_not_overlap_chat": true
 }

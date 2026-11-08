@@ -3,10 +3,10 @@ let state={entries:[],draft:'',expanded:false,busy:false},lastEntries='',draftTi
 function error(text=''){$('error').textContent=text;$('error').hidden=!text;if(text&&!state.expanded)bridge.action('expand').catch(()=>{});}
 async function act(name,value){try{error();return await bridge.action(name,value);}catch(e){error(e.message);}}
 function render(value){
- state=value;if(value.warning)error(value.warning);document.body.dataset.expanded=String(Boolean(value.expanded));$('conversation').hidden=!value.expanded;
+ state=value;const phase=value.voice?.phase||'idle';$('voice-question').textContent=phase==='recording'?'보내기':phase==='preparing'?'준비 중':phase==='processing'?'답변 중':'말하기';$('voice-question').disabled=['preparing','processing'].includes(phase)||(value.busy&&phase!=='recording');$('voice-question').setAttribute('aria-label',phase==='recording'?'녹음 끝내고 보내기':'음성으로 질문');$('chat-clock').textContent=value.metrics?.clock||'00:00';$('chat-heart').textContent=value.metrics?.bpm?`${value.metrics.bpm} bpm`:'— bpm';if(value.warning)error(value.warning);document.body.dataset.expanded=String(Boolean(value.expanded));$('conversation').hidden=!value.expanded;
  const entries=value.entries.filter(e=>e.kind!=='file');$('toggle').hidden=!entries.length&&!value.expanded;$('toggle').textContent=value.expanded?'접기':'대화';$('toggle').setAttribute('aria-expanded',String(Boolean(value.expanded)));
  const context=value.context||{};$('study-context').textContent=(context.materials||[]).join(' · ')||'질문할 때의 화면을 함께 참고해요.';$('study-context').title=context.goal||'';
- $('add').disabled=Boolean(value.busy||sending);$('add').textContent=editing?'수정 저장':value.busy?'답변 중…':'채팅하기';
+ $('add').disabled=Boolean(value.busy||sending||phase!=='idle');$('add').textContent=editing?'수정 저장':value.busy?'답변 중…':'채팅하기';
  if(document.activeElement!==$('draft')&&!editing)$('draft').value=value.draft||'';
  const signature=JSON.stringify(entries);if(signature===lastEntries)return;lastEntries=signature;$('empty').hidden=Boolean(entries.length);$('entries').hidden=!entries.length;
  const nodes=entries.map(entry=>{
@@ -21,10 +21,11 @@ function render(value){
  });$('entries').replaceChildren(...nodes);$('entries').scrollTop=$('entries').scrollHeight;
 }
 async function send(){
- const body=$('draft').value.trim();if(!body||sending||state.busy)return;clearTimeout(draftTimer);sending=true;$('add').disabled=true;
+ const body=$('draft').value.trim();if(!body||sending||state.busy||state.voice?.phase&&state.voice.phase!=='idle')return;clearTimeout(draftTimer);sending=true;$('add').disabled=true;
  try{error();if(editing)await bridge.action('edit',{id:editing,body});else await bridge.action('query',{message:body});editing=null;$('draft').maxLength=4000;if($('draft').value.trim()===body)$('draft').value='';await bridge.action('draft',$('draft').value);}
- catch(e){error(e.message);}finally{sending=false;$('add').disabled=Boolean(state.busy);$('add').textContent=state.busy?'답변 중…':'채팅하기';}
+ catch(e){error(e.message);}finally{sending=false;$('add').disabled=Boolean(state.busy||state.voice?.phase&&state.voice.phase!=='idle');$('add').textContent=state.busy?'답변 중…':'채팅하기';}
 }
+$('voice-question').onclick=()=>act('voice');
 $('composer').onsubmit=e=>{e.preventDefault();send();};$('draft').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send();}};
 $('draft').oninput=()=>{if(editing)return;clearTimeout(draftTimer);const text=$('draft').value;draftTimer=setTimeout(()=>act('draft',text),400);};
 $('toggle').onclick=()=>act(state.expanded?'collapse':'expand');$('close').onclick=()=>act('hide');

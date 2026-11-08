@@ -13,7 +13,7 @@ async function fixture({captureWait=async()=>{},configure=true,extraWindows=()=>
 }
 test('native capture freezes gaze, hides owned windows, restores inactive and submits only after key release',async()=>{
  const f=await fixture();await f.press();assert.deepEqual(f.order,['hide-overlay','hide-pointer','capture','restore-overlay','restore-pointer']);const start=f.sent.find(e=>e.type==='start');assert.ok(start);
- await assert.rejects(()=>f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true}),/키 해제/);
+ await assert.rejects(()=>f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true}),/확인되지/);
  f.setTime(1500);f.voice.sample({x:-300,y:300,validity:'valid',validated:true,pose_ok:true}); // later overlay gaze cannot replace frozen target
  f.hook.emit('keyup',{keycode:28});await f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true});
  assert.equal(f.apiCalls.length,1);assert.equal(f.apiCalls[0][2].target.calibration_id,'cal-1');assert.deepEqual(f.crops[0],{x:400,y:600,width:960,height:600});f.voice.disable();
@@ -30,15 +30,15 @@ test('neural processing latency cannot make old camera frames look current at th
  assert.equal((await f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true})).select,true);
  assert.equal(f.apiCalls.length,0);f.voice.disable();
 });
-test('typed screen help needs no voice configuration and uploads only a user-confirmed frozen crop',async()=>{
+test('typed screen help needs no voice configuration and automatically uploads the entire frozen display',async()=>{
  const f=await fixture({configure:false});
  const frame=await f.voice.screenPrepare({message:'분모는 왜 4야?',consent:true});
- assert.ok(frame.initial);assert.equal(frame.display.display_id,2);assert.equal(f.apiCalls.length,0);
+ assert.equal(frame.initial,undefined);assert.equal(frame.display.display_id,2);assert.equal(f.apiCalls.length,0);
  assert.deepEqual(f.order,['hide-overlay','hide-pointer','capture','restore-overlay','restore-pointer']);
  await f.voice.screenSubmit({x:-1400,y:100,width:600,height:400});
  assert.equal(f.apiCalls[0][1],'/study/sessions/fixture-session/screen-help');
- const body=f.apiCalls[0][2];assert.equal(body.message,'분모는 왜 4야?');assert.equal(body.target.selection,'manual');assert.ok(!('audio' in body));
- assert.deepEqual(f.crops[0],{x:80,y:200,width:1200,height:800});f.voice.disable();
+ const body=f.apiCalls[0][2];assert.equal(body.message,'분모는 왜 4야?');assert.equal(body.target.selection,'screen');assert.ok(!('audio' in body));
+ assert.deepEqual(f.crops[0],{x:0,y:0,width:2880,height:1800});f.voice.disable();
 });
 test('typed preparation never sends on cancellation, missing consent, or session change',async()=>{
  const f=await fixture({configure:false});
@@ -56,7 +56,7 @@ test('cancellation while a typed screen capture is preparing cannot revive the f
 test('button voice records a frozen monitor without calibration or global-key configuration; only explicit send releases it',async()=>{
  const f=await fixture({configure:false});f.setTime(4000);
  await f.voice.buttonStart({consent:true,target:'screen'});const start=f.sent.find(e=>e.type==='start');assert.equal(start.data.control,'button');assert.equal(f.hook.listenerCount('keyup'),0);
- await assert.rejects(()=>f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true}),/키 해제/);
+ await assert.rejects(()=>f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true}),/확인되지/);
  f.voice.buttonRelease();await f.voice.submit({id:start.data.id,audio:'x',duration_ms:1000,speech_detected:true});
  assert.equal(f.apiCalls.length,1);assert.equal(f.apiCalls[0][2].target.selection,'screen');assert.equal(f.apiCalls[0][2].target.calibration_id,null);assert.deepEqual(f.crops[0],{x:0,y:0,width:2880,height:1800});f.voice.disable();
 });

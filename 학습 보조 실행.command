@@ -21,5 +21,5 @@ if ! .venv/bin/python -c 'import pypdf, last_hour' >/dev/null 2>&1; then
 fi
 
 cd overlay
-if [[ ! -d node_modules/electron || ! -d node_modules/uiohook-napi ]]; then npm ci; fi
+if [[ ! -d node_modules/electron ]]; then npm ci; fi
 npm start

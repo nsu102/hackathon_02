@@ -17,7 +17,7 @@ with sync_playwright() as p:
  const fixturePNG='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a8GQAAAAASUVORK5CYII=';
  window.actions=[];window.planStore={};window.planBodies=[];window.padEntries=[];window.recordId=0;window.pendingTarget='screen';
  const reply=async()=>{const message={id:'answer-'+window.recordId,role:'assistant',content:'CENT는 CXL로 여러 메모리 장치를 연결해요.',source:'openrouter',mode:'context',...(window.replyDocument?{artifact:{kind:'translation',title:'PIM Is All You Need 요약',summary:'메모리 가까이에서 추론 연산을 처리해요.',source_note:'현재 화면'}}:{})};window.testSession.messages.push({id:'user-'+window.recordId,role:'user',content:'CENT에서 CXL이 왜 필요해?'},message);await window.voiceEvent({type:'answer',data:{message}});};
- window.pressOrReleaseShortcut=()=>{if(document.getElementById('voice-status').textContent.startsWith('녹음 중'))return window.voiceEvent({type:'release',data:window.recordId});window.recordId++;return window.voiceEvent({type:'start',data:{id:window.recordId,control:'hotkey',attachment:{display_id:1,width:2880,height:1800}}});};
+ window.pressOrReleaseShortcut=()=>{if(document.getElementById('voice-status').textContent.startsWith('녹음 중'))return window.voiceEvent({type:'release',data:window.recordId});window.recordId++;return window.voiceEvent({type:'start',data:{id:window.recordId,control:'button',attachment:{display_id:1,width:2880,height:1800}}});};
  window.studyBridge={ready:async()=>({ok:true,health:{study_model:{configured:true}}}),onDisplayChanged:cb=>window.displayChanged=cb,onLost:()=>{},onVoice:cb=>{window.voiceEvent=cb;},onAppAction:cb=>{window.appAction=cb;},
  window:async(action,data)=>{window.actions.push({action,data});
  if(action==='collapse'){window.collapsed=!window.collapsed;return window.collapsed;}
@@ -26,12 +26,12 @@ with sync_playwright() as p:
  if(action==='overlay-bounds')return null;
  if(action==='selection-open')return {x:-1440,y:0,width:440,height:820,display_id:1};
  if(action==='scratchpad-begin'){const id='pad-'+window.padEntries.length;window.padEntries.push({id,status:'pending'});return id;}if(action==='scratchpad-complete'){const entry=window.padEntries.find(e=>e.id===data.id);if(entry)Object.assign(entry,{status:'ready',message:data.message});}if(action==='scratchpad-fail'){const entry=window.padEntries.find(e=>e.id===data.id);if(entry)entry.status='error';}if(action==='materials-import')return [{name:'notes.pdf',text:'고유 확인 코드 37. CENT는 CXL과 PIM을 결합한 LLM 추론 시스템입니다.',pages:1,truncated:false}];if(action==='voice-configure'){window.pendingTarget=data.target;return {enabled:data.enabled};}if(action==='connection-settings')return {key_configured:true,model:'anthropic/claude-sonnet-5.5'};
- if(action==='voice-cancel')return;
+ if(action==='voice-cancel')return;if(action==='voice-button-start'){window.recordId++;await window.voiceEvent({type:'start',data:{id:window.recordId,control:'button',attachment:{display_id:1,width:2880,height:1800}}});return {started:true};}if(action==='voice-button-release'){await window.voiceEvent({type:'release',data:window.recordId});return;}
  if(action==='screen-prepare'){window.typedMessage=data.message;return {png:fixturePNG,display:{x:-1440,y:0,width:1440,height:900,display_id:1}};}
  if(action==='screen-submit'){const m={id:'typed-answer',role:'assistant',content:'텍스트 질문에 대한 화면 답변',source:'openrouter',mode:'context'};window.testSession.messages.push({id:'typed-user',role:'user',content:window.typedMessage},m);return {message:m};}
  if(action==='voice-submit'){if(window.pendingTarget==='manual')window.voiceEvent({type:'select',data:{png:fixturePNG,display:{display_id:1}}});else{await window.voiceEvent({type:'processing'});await reply();}}
  if(action==='voice-select'){await window.voiceEvent({type:'processing'});await reply();}return null;},
- request:async(method,route,body)=>{const heart={reading:false,bpm:null,message:'미연결',age_seconds:null,connected:false,source:null};
+ request:async(method,route,body)=>{const heart={reading:true,bpm:72,message:'서버 수신',age_seconds:.2,connected:true,source:'collector'};
  if(route.startsWith('/study/plans')){window.planBodies=window.planBodies||[];window.planStore=window.planStore||{};const parts=route.split('/');if(method==='POST'&&route==='/study/plans'){window.planBodies.push(body);const key=body.goal+'|'+body.material;let plan=Object.values(window.planStore).find(p=>p.key===key);if(!plan||body.regenerate){const id=plan?.id||String(Object.keys(window.planStore).length+1).padStart(64,'a');plan={id,key,title:'PIM Is All You Need 학습',goal:body.goal,source:body.ai_enabled?'ai':'outline',sources:['notes.pdf'],version:(plan?.version||0)+1,items:[{id:'b'.repeat(15)+'1',label:'CENT의 CXL 연결 설명하기',evidence:'CXL로 메모리 장치들을 연결한다.',done:false},{id:'b'.repeat(15)+'2',label:'PIM과 PNM의 역할 비교하기',evidence:'PIM과 PNM이 추론 연산을 나누어 처리한다.',done:false}]};window.planStore[id]=plan;}return JSON.parse(JSON.stringify(plan));}const plan=window.planStore[parts[3]];if(method==='POST'){Object.assign(plan.items.find(i=>i.id===parts[5]),body);plan.version++;}return JSON.parse(JSON.stringify(plan));}
  if(route==='/study/speech'){window.speechRequests.push(body);return {audio:window.speechAudio,mime:'audio/wav'};}if(route==='/study/heart')return heart;
  if(route==='/study/sessions'&&window.failNextStart){window.failNextStart=false;throw new Error('테스트 서버 재시도');}
@@ -48,12 +48,8 @@ with sync_playwright() as p:
   name=page.locator(selector).evaluate('(el,value)=>[...el.options].find(o=>o.value===value).label',value)
   page.locator(f'button[data-select-id="{selector[1:]}"]').click()
   page.locator('[role=listbox]:visible').get_by_role('option',name=name,exact=True).click()
- def start_voice():
-  page.wait_for_function("() => document.getElementById('voice-enable').textContent.includes('끄기')")
-  page.evaluate("async()=>{window.pendingTarget=document.getElementById('voice-target').value;window.recordId++;await window.voiceEvent({type:'start',data:{id:window.recordId,control:'hotkey',attachment:{display_id:1,width:2880,height:1800}}});}")
- def release_voice():
-  page.evaluate("window.voiceEvent({type:'release',data:window.recordId})")
- page.add_init_script("localStorage.setItem('study-setting-focus-mode','region')")
+ def start_voice():page.locator('#voice-talk').click()
+ def release_voice():page.locator('#voice-talk').click()
  def settings(group=None):
   if page.locator('#settings').is_hidden():page.locator('#settings-toggle').click()
   if group:
@@ -76,7 +72,10 @@ with sync_playwright() as p:
  page.locator('#material-add').click();page.wait_for_function("() => document.getElementById('material-list').textContent.includes('notes.pdf')")
  page.evaluate('window.failNextStart=true');page.locator('#start').click();page.wait_for_function("() => !document.getElementById('start').disabled");assert page.locator('#setup').is_visible();assert '테스트 서버 재시도' in page.locator('#error').inner_text()
  page.locator('#start').click();page.locator('#learning').wait_for(state='visible');assert page.locator('#focus-panel').is_visible()
- assert page.locator('#hint,#explain,#quiz,#message,#chat-form,#voice-talk').count()==0
+ assert page.locator('#hint,#explain,#quiz,#message,#chat-form').count()==0
+ assert page.locator('#voice-talk').count()==1
+ assert page.locator('#voice-enable,#voice-shortcut,#voice-target').count()==0
+ assert not page.locator('#read-answer').is_checked()
  settings('plan-settings');page.wait_for_function("() => document.querySelectorAll('#checklist-editor li').length===2")
  assert page.evaluate("window.planBodies[0].ai_enabled===false&&window.planBodies[0].consent===false")
  page.locator('#checklist-editor input[type=checkbox]').first.check();page.wait_for_function("() => document.getElementById('checklist-status').textContent.startsWith('1/2')")
@@ -92,24 +91,26 @@ with sync_playwright() as p:
  assert page.locator('#focus-notice').is_visible();assert '화면 이탈' in page.locator('#focus-state').inner_text()
  assert page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&a.data.kind==='nag'&&a.data.show)")
  page.locator('#focus-correction').click();assert page.locator('#focus-notice').is_hidden()
- settings('voice-settings');page.locator('#voice-consent').check();page.locator('#voice-enable').click();page.wait_for_function("() => document.getElementById('voice-enable').textContent.includes('끄기')");study()
+ settings('voice-settings');page.locator('#voice-consent').check();study()
  start_voice();page.wait_for_function("() => document.getElementById('voice-status').textContent.startsWith('녹음 중')")
- assert '단축키를 놓으면' in page.locator('#voice-status').inner_text();assert page.locator('#voice-attachment').is_visible()
+ assert '보내기를 눌러주세요' in page.locator('#voice-status').inner_text();assert page.locator('#voice-attachment').is_visible()
  assert page.evaluate("window.actions.filter(a=>a.action==='voice-submit').length")==0
  page.wait_for_timeout(1200);release_voice();page.wait_for_function("() => document.getElementById('chat').textContent.includes('CENT는 CXL')")
  audio=page.evaluate("window.actions.find(a=>a.action==='voice-submit').data");assert audio['id']==1 and audio['speech_detected'] and audio['audio'].startswith('GkXf')
- assert page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&a.data.kind==='answer'&&a.data.attachment&&a.data.materials===1)")
+ assert not page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&['answer','voice'].includes(a.data.kind))")
+ assert page.locator('#session-heart').inner_text()=='72 bpm'
+ assert page.evaluate("window.actions.some(a=>a.action==='scratchpad-metrics'&&a.data.bpm===72)")
+ assert page.evaluate('window.speechRequests.length')==0
  assert page.evaluate("window.padEntries[0].status==='ready'")
  start_voice();page.locator('#voice-cancel').wait_for(state='visible');page.locator('#voice-cancel').click();page.wait_for_timeout(150)
  assert page.evaluate("window.actions.filter(a=>a.action==='voice-submit').length")==1
- page.evaluate('window.replyDocument=true');settings('voice-settings');select_value('#voice-target','manual');page.locator('#voice-enable').click();study()
- start_voice();page.wait_for_timeout(1200);release_voice();page.locator('#region-editor').wait_for(state='visible')
- page.mouse.move(30,250);page.mouse.down();page.mouse.move(350,620);page.mouse.up();page.locator('#region-save').click();page.locator('#region-editor').wait_for(state='hidden')
+ page.evaluate('window.replyDocument=true');start_voice();page.wait_for_timeout(1200);release_voice()
+ assert page.locator('#region-editor').count()==0
  page.wait_for_function("() => document.querySelectorAll('#chat .assistant').length===2")
  assert page.evaluate("window.padEntries.at(-1).message.artifact.summary==='메모리 가까이에서 추론 연산을 처리해요.'")
  page.evaluate("async()=>{await window.voiceEvent({type:'processing'});await window.voiceEvent({type:'cancel',data:'시험 취소'});}");page.wait_for_timeout(100)
  assert page.evaluate("window.padEntries.at(-1).status==='error'")
- settings('voice-settings');select_value('#voice-target','screen');page.locator('#voice-enable').click();settings('speech-settings')
+ settings('speech-settings')
  select_value('#tts-mode','natural');select_value('#tts-voice','Kore');page.locator('#tts-preview').click()
  page.wait_for_function("() => document.getElementById('tts-status').textContent.includes('읽고 있어요')")
  assert page.evaluate("window.speechRequests[0].voice==='Kore'&&window.speechRequests[0].kind==='preview'&&window.speechRequests[0].consent")
@@ -131,8 +132,9 @@ with sync_playwright() as p:
  assert page.evaluate("window.actions.some(a=>a.action==='connection-save'&&a.data.api_key==='fixture-api-key-for-ui-only')")
  assert not page.evaluate("JSON.stringify(localStorage).includes('fixture-api-key-for-ui-only')")
  assert not page.evaluate("window.actions.some(a=>a.action==='calibration-open'||a.action==='gaze-visible'||a.action==='materials-example')")
+ assert not page.evaluate("window.actions.some(a=>a.action==='voice-shortcut-guide'||a.action==='voice-configure')")
  assert not errors,errors
- passed=['pad text query attaches screen and receives answer','failed Start request can be retried','start button ready and clickable','start again after ending','removed calibration and validation UI','removed built-in paper demo','legacy region preference migrated','file upload creates checklist','manual checklist completion and edit','AI plan regeneration consent','checklist visibility','settings separate from study','six collapsed settings groups','390/440px no horizontal overflow','uncalibrated direction triggers away alert','false alarm grace','shortcut begins WebM recording','key release sends screenshot question','cancel discards recording','manual question crop','voice response saved to scratchpad','translation summary saved','cancelled pad request interrupted','natural TTS plays','voice preference saved','recording stops TTS','collapsed recording indicator','session pause/end','API key cleared after save','no raw key in localStorage']
+ passed=['pad text query attaches screen and receives answer','failed Start request can be retried','start button ready and clickable','start again after ending','removed calibration and validation UI','removed built-in paper demo','legacy region preference migrated','file upload creates checklist','manual checklist completion and edit','AI plan regeneration consent','checklist visibility','settings separate from study','six collapsed settings groups','390/440px no horizontal overflow','uncalibrated direction triggers away alert','false alarm grace','click begins WebM recording','send click submits frozen screen question','cancel discards recording','automatic full display without a region selector','voice response saved to scratchpad','translation summary saved','cancelled pad request interrupted','natural TTS plays','voice preference saved','recording stops TTS','collapsed recording indicator','session pause/end','API key cleared after save','no raw key in localStorage']
  (root/'docs/qa/browser-qa.json').write_text(json.dumps(dict(passed=passed,page_errors=errors,environment='headless system Chrome; synthetic microphone and direction; mocked native bridge. No physical accuracy claims.'),ensure_ascii=False,indent=2))
  print(f'Browser UI: {len(passed)} workflows passed; no page errors')
  browser.close()

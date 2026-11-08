@@ -1,0 +1,31 @@
+{
+  "version": "0.12.0",
+  "installed_from_dmg": true,
+  "installed_path": "/Applications/Study Signal.app",
+  "codesign_verified": true,
+  "voice_key_hook_bundled": false,
+  "private_env_in_bundle": false,
+  "dmg_bytes": 167204767,
+  "dmg_sha256": "04c43832408e204c1035f37bf1f6de42136bf69a4366b7db0d368bf8e9d7fe16",
+  "checks": {
+    "node_passed": 75,
+    "main_ui_passed": 30,
+    "chat_ui_passed": 17,
+    "warning_ui_passed": 8,
+    "installed_native_passed": true,
+    "physical_microphone_tested": false
+  },
+  "heart": {
+    "reading": true,
+    "connected": true,
+    "source": "collector",
+    "age_seconds": 2.7,
+    "sample_count": 12,
+    "live_bpm_available": true
+  },
+  "tunnel": {
+    "external_intake_connected": true,
+    "same_previous_hostname": true,
+    "public_read_port_exposed": false
+  }
+}

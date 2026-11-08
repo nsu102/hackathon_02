@@ -61,6 +61,8 @@ ipcMain.handle('window:action', async (e, action, data) => {
   if (action === 'displays') return screen.getAllDisplays().map(d=>({id:d.id,label:d.label||'모니터 '+d.id,...d.bounds,scale:d.scaleFactor}));
   if (action === 'overlay-bounds') return [win,...(bubbles?.windows()||[]),...(checklist?.windows()||[]),...(scratchpad?.windows()||[])].filter(w=>w&&!w.isDestroyed()&&w.isVisible()).map(w=>w.getBounds());
   if (action === 'scratchpad-context') {scratchpad.context(data);return;}
+  if (action === 'scratchpad-voice') {scratchpad.voice(data);return;}
+  if (action === 'scratchpad-metrics') {scratchpad.metrics(data);return;}
   if (action === 'scratchpad-show') {scratchpad.show();return;}
   if (action === 'scratchpad-begin') return scratchpad.begin(data);
   if (action === 'scratchpad-complete') {scratchpad.complete(data?.id,data?.message,data?.question);return;}
@@ -90,11 +92,11 @@ ipcMain.handle('window:action', async (e, action, data) => {
     runtimeTools.writeEnv(path.join(root,'.env'),values);
     setTimeout(()=>{app.relaunch();app.quit();},350);return {restarting:true};
   }
-  if (action === 'voice-shortcut-guide') return voice.guide(data?.shortcut);
-  if (action === 'voice-shortcut-start') {micIntent=Date.now()+15000;return voice.shortcutStart(data);}
-  if (action === 'voice-configure') { micIntent=Date.now()+15000; return voice.configure(data); }
+  if (action === 'voice-shortcut-guide') return {registered:false};
+  if (action === 'voice-shortcut-start') throw new Error('음성 질문은 말하기 버튼을 사용해주세요.');
+  if (action === 'voice-configure') {if(data?.enabled)throw new Error('음성 단축키는 제거됐어요. 말하기 버튼을 사용해주세요.');return voice.configure({enabled:false});}
   if (action === 'voice-submit') return voice.submit(data);
-  if (action === 'voice-button-start') {micIntent=Date.now()+15000;return voice.buttonStart(data);}
+  if (action === 'voice-button-start') {micIntent=Date.now()+15000;return voice.buttonStart({consent:data?.consent,target:'screen'});}
   if (action === 'voice-button-release') return voice.buttonRelease();
   if (action === 'voice-select') return voice.select(data);
   if (action === 'voice-cancel') {voice.cancel();return;}
@@ -176,9 +178,9 @@ else app.whenReady().then(async () => {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' })); win.webContents.on('will-navigate', e => e.preventDefault());
   win.webContents.session.setPermissionCheckHandler((contents, permission, origin) => contents === win.webContents && permission === 'media' && typeof origin === 'string' && origin.startsWith('study://app'));
   win.webContents.session.setPermissionRequestHandler((contents, permission, callback, details) => callback(contents === win.webContents && permission === 'media' && (details.mediaTypes?.includes('audio') ? micIntent > Date.now() : cameraIntent > Date.now())));
-  bubbles=require('./bubbles.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),action:(action,value)=>{if(['settings','history','materials'].includes(action))showMain(action);else win?.webContents.send('app:action',{action:'bubble-'+action,value});}});
+  bubbles=require('./bubbles.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),avoid:()=>[...(scratchpad?.windows()||[]),...(checklist?.windows()||[])].filter(w=>w&&!w.isDestroyed()&&w.isVisible()).map(w=>w.getBounds()),action:(action,value)=>{if(['settings','history','materials'].includes(action))showMain(action);else win?.webContents.send('app:action',{action:'bubble-'+action,value});}});
   checklist=require('./checklist.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),action:(name,value)=>{if(name==='settings')showMain('plan-settings');else win?.webContents.send('app:action',{action:'plan-'+name,value});}});
-  scratchpad=require('./scratchpad.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),folder:path.join(qaData||path.join(root,'data'),'scratchpad'),copyText:text=>clipboard.writeText(text),onQuery:async value=>{const ready=await readiness;if(!ready?.ok)throw new Error('학습 서버를 다시 연결해주세요.');if(!win||win.isDestroyed())throw new Error('앱을 다시 열어주세요.');win.webContents.send('app:action',{action:'pad-query',value});},onVisibility:shown=>{checklist.suppress(captureSuppressed||shown);if(shown)checklist.hide();else if(!captureSuppressed)checklist.update({});}});
+  scratchpad=require('./scratchpad.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),folder:path.join(qaData||path.join(root,'data'),'scratchpad'),copyText:text=>clipboard.writeText(text),onBounds:()=>bubbles?.position(),onVoice:async()=>{const ready=await readiness;if(!ready?.ok)throw new Error('학습 서버를 다시 연결해주세요.');win?.webContents.send('app:action',{action:'pad-voice'});},onQuery:async value=>{const ready=await readiness;if(!ready?.ok)throw new Error('학습 서버를 다시 연결해주세요.');if(!win||win.isDestroyed())throw new Error('앱을 다시 열어주세요.');win.webContents.send('app:action',{action:'pad-query',value});},onVisibility:shown=>{checklist.suppress(captureSuppressed||shown);if(shown)checklist.hide();else if(!captureSuppressed)checklist.update({});}});
   voice=await require('./native-voice.cjs')({win:()=>win,display:()=>gazeDisplay,api,systemPreferences,globalShortcut,desktopCapturer,pointer:()=>pointerWin,onStart:()=>{micIntent=Date.now()+15000;},extraWindows:()=>[...bubbles.windows(),...checklist.windows(),...scratchpad.windows()],onCapture:active=>{captureSuppressed=active;bubbles.suppress(active);scratchpad.suppress(active);checklist.suppress(active||scratchpad.isShown());},screen});
   powerMonitor.on('suspend',()=>voice.cancel('잠자기 전환으로 녹음을 폐기했어요.'));
   powerMonitor.on('lock-screen',()=>voice.cancel('화면 잠금으로 녹음을 폐기했어요.'));
@@ -190,6 +192,7 @@ else app.whenReady().then(async () => {
     checklist?.position();bubbles?.position();scratchpad?.position();
   });
   screen.on('display-removed', (_, display) => {if(gazeDisplay&&display.id===gazeDisplay.id)invalidateDisplay();});
+  if(process.env.STUDY_NATIVE_QA==='1')console.info(JSON.stringify({component:'voice-input',mode:'click',hotkey:globalShortcut.isRegistered('CommandOrControl+Shift+Enter')}));
   readiness = startBackend().then(health => ({ ok: true, health }), () => ({ ok: false, message: '학습 서버를 시작하지 못했어요. Python과 .env를 확인해주세요.' }));
   const show=(section)=>showMain(section||'history');
   Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Study Signal',submenu:[{label:'채팅 열기',accelerator:'CommandOrControl+Shift+P',click:()=>scratchpad.show()},{label:'설정…',accelerator:'CommandOrControl+,',click:()=>show('settings')},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{label:'Study Signal 종료',accelerator:'CommandOrControl+Q',click:()=>app.quit()}]},{role:'editMenu'},{role:'windowMenu'}]));
