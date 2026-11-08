@@ -1,0 +1,17 @@
+{
+  "version": "0.12.2",
+  "runtime": "Study Signal",
+  "packaged": true,
+  "installed_path_correct": true,
+  "screen_before": "granted",
+  "probe_attempted": true,
+  "screen_pixels_saved": false,
+  "external_model_called": false,
+  "probe": {
+    "ok": true,
+    "display_id": 1,
+    "width": 2940,
+    "height": 1912
+  },
+  "screen_after": "granted"
+}

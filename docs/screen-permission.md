@@ -15,3 +15,5 @@
 검증: 거절 상태에서도 OS 요청 도달, 거절·정책 제한 시 미전송, 허용 후 로컬 캡처 테스트, 응답 지연 시 창 복원, 캡처 후 권한 철회 시 미전송, 앱별 ScreenCapture만 초기화를 단위 시험한다. 실기기 허용/캡처 결과는 qa/release-v0122.json을 따른다.
 
 근거: [Apple: code requirements와 권한 신원](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements), [Electron desktopCapturer](https://www.electronjs.org/docs/latest/api/desktop-capturer), [권한 상태와 재시작](https://www.electronjs.org/docs/latest/api/system-preferences).
+
+실기기 결과: 사용자 재허용이 시스템에 적용된 뒤 같은 0.12.2 설치판을 재실행했다. 화면 상태 granted, 실제 캡처 2940×1912 성공. 이미지 저장과 모델 호출 없이 확인했다. 허용 후 앱 파일을 재빌드·재서명하지 않았다.

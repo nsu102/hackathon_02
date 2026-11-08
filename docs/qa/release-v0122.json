@@ -10,8 +10,13 @@
   "main_ui_passed": 31,
   "screen_before_repair": "denied",
   "reset_scope": "ScreenCapture dev.studysignal.mac",
-  "user_regrant_required": true,
-  "real_capture_confirmed": false,
+  "user_regrant_required": false,
+  "real_capture_confirmed": true,
   "screen_pixels_saved": false,
-  "external_model_called": false
+  "external_model_called": false,
+  "screen_after_grant": "granted",
+  "capture_dimensions": {
+    "width": 2940,
+    "height": 1912
+  }
 }

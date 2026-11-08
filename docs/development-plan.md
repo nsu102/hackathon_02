@@ -15,4 +15,4 @@
 
 추가 완료: 기본 DMG에서 시선 모델/PyTorch/OpenCV 제거, 앱 설정의 시선 패키지 설치·검증·취소·진행률, 설치 전 카메라 자동 시작 차단. 실제 분리 패키지 설치와 MPS 준비, 기본판의 OpenRouter 음성 질의·화면/PDF 설명을 확인했다. [선택 설치](optional-gaze.md)
 
-추가 검증: v0.12.2 Node 80개·메인 UI 31개 통과. 수정 DMG를 /Applications에 설치하고 Launch Services로 실행한 실제 설치판에서 화면 권한 denied를 확인했다. 이 앱의 ScreenCapture 기록만 초기화하고 OS 재허용을 요청했다. 재허용 후 캡처 성공은 아직 확인하지 않았으며 qa/release-v0122.json에 상태를 기록한다. v0.12.1의 채팅·경고창 비중첩 네이티브 시험 기록은 별도로 유지한다.
+추가 검증: v0.12.2 Node 80개·메인 UI 31개 통과. 수정 DMG를 /Applications에 설치하고 Launch Services로 실행한 실제 설치판에서 화면 권한 denied를 확인했다. 이 앱의 ScreenCapture 기록만 초기화하고 OS 재허용을 요청했다. 사용자 재허용 후 새 프로세스에서 granted 상태와 2940×1912 실제 화면 캡처 성공을 확인했다. 픽셀은 저장·전송하지 않았으며 qa/release-v0122.json에 결과를 기록한다. v0.12.1의 채팅·경고창 비중첩 네이티브 시험 기록은 별도로 유지한다.
