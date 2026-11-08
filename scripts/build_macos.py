@@ -71,7 +71,7 @@ def build_app():
  version=json.loads((ROOT/'overlay/package.json').read_text())['version']
  with (contents/'Info.plist').open('rb') as f:info=plistlib.load(f)
  executable=contents/'MacOS'/info['CFBundleExecutable'];executable.rename(contents/'MacOS'/'StudySignal')
- info.update(CFBundleExecutable='StudySignal',CFBundleName='Study Signal',CFBundleDisplayName='Study Signal',CFBundleIdentifier='dev.studysignal.mac',CFBundleShortVersionString=version,CFBundleVersion=version,CFBundleIconFile='StudySignal.icns',LSMinimumSystemVersion='15.0',LSApplicationCategoryType='public.app-category.education',NSCameraUsageDescription='화면 응시와 이탈을 이 Mac에서 감지합니다. 얼굴 영상은 서버로 전송하지 않습니다.',NSMicrophoneUsageDescription='버튼이나 단축키로 녹음한 학습 질문을 전사합니다.',NSScreenCaptureUsageDescription='질문을 시작할 때의 선택 모니터 화면을 AI 설명에 사용합니다.',NSCameraUseContinuityCameraDeviceType=True)
+ info.update(CFBundleExecutable='StudySignal',CFBundleName='Study Signal',CFBundleDisplayName='Study Signal',CFBundleIdentifier='dev.studysignal.mac',CFBundleShortVersionString=version,CFBundleVersion=version,CFBundleIconFile='StudySignal.icns',LSMinimumSystemVersion='15.0',LSApplicationCategoryType='public.app-category.education',NSCameraUsageDescription='화면 응시와 이탈을 이 Mac에서 감지합니다. 얼굴 영상은 서버로 전송하지 않습니다.',NSMicrophoneUsageDescription='단축키를 누르는 동안 녹음한 학습 질문을 전사합니다.',NSScreenCaptureUsageDescription='질문을 시작할 때의 선택 모니터 화면을 AI 설명에 사용합니다.',NSCameraUseContinuityCameraDeviceType=True)
  with (contents/'Info.plist').open('wb') as f:plistlib.dump(info,f)
  for p in (contents/'Frameworks').glob('Electron Helper*.app/Contents/Info.plist'):
   with p.open('rb') as f:helper=plistlib.load(f)

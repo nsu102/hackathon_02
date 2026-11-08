@@ -1,0 +1,26 @@
+{
+  "scenario": "synthetic Korean voice -> authored English screen -> Korean translation and summary",
+  "transcript": "이거 한국어로 번역해줘. 핵심 요약도 같이 정리해줘.",
+  "seconds": 6.47,
+  "message": {
+    "id": "d0257075b9a644c08b226e88b4e9b6e3",
+    "role": "assistant",
+    "content": "STUDY SIGNAL · 자체 제작 테스트 자료\n\n캐시 인식 메모리 접근\n\n캐시는 주 메모리에 대한 반복적인 접근을 줄여 준다.\n\n이 예시 실험에서 평균 접근 지연 시간은 120 ns에서 80 ns로 감소했다. 이는 40 ns, 즉 약 33.3%가 줄어든 것이다.\n\n이 수치들은 이 예시에만 해당한다. 실제 하드웨어의 벤치마크 결과가 아니다.",
+    "question": "",
+    "answer": "",
+    "source": "openrouter",
+    "mode": "context",
+    "at": 1794108020.851306,
+    "training_eligible": false,
+    "artifact": {
+      "kind": "translation",
+      "title": "캐시 인식 메모리 접근",
+      "summary": "1. 캐시는 주 메모리에 대한 반복 접근을 줄여 준다.\n2. 예시 실험에서 평균 접근 지연 시간이 120 ns에서 80 ns로 줄었다.\n3. 감소량은 40 ns이며, 40/120 계산 기준으로 약 33.3%다.\n4. 이 수치는 예시일 뿐 실제 하드웨어의 벤치마크 결과가 아니므로 일반화하면 안 된다.",
+      "source_note": "화면에 보이는 짧은 한 페이지(제목과 본문 세 문단)만 번역했으며, 논문 전체를 읽은 것은 아닙니다. 흐리거나 잘린 부분은 없었고, 표나 그림도 보이지 않았습니다. 첨부 자료는 없었습니다."
+    }
+  },
+  "original_numbers_preserved": true,
+  "media_saved": false,
+  "user_pdf_sent": false,
+  "physical_microphone_and_capture_tested": false
+}

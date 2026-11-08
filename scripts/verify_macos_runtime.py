@@ -8,7 +8,7 @@ import argparse,http.client,json,os,secrets,socket,subprocess,tempfile,time,base
 ROOT=Path(__file__).resolve().parents[1]
 
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('service',type=Path);parser.add_argument('weights',type=Path);parser.add_argument('--live',action='store_true');parser.add_argument('--report',default='macos-runtime.json');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('service',type=Path);parser.add_argument('weights',type=Path);parser.add_argument('--live',action='store_true');parser.add_argument('--tts',action='store_true');parser.add_argument('--report',default='macos-runtime.json');args=parser.parse_args()
  import sys
  sys.path.insert(0,str(ROOT))
  from last_hour.config import load_env
@@ -71,6 +71,14 @@ def main():
     report['voice_and_screen']={'transcript':voice['transcript'],'content':voice['message']['content'],'seconds':round(time.monotonic()-started,2)}
     saved=''.join(f.read_text() for f in (cwd/'data').rglob('*.json'));assert frame['capture']['png'] not in saved;assert base64.b64encode(audio_path.read_bytes()).decode() not in saved
     report['media_persisted']=False
+   if args.tts:
+    import io
+    started=time.monotonic();speech=request('POST','/study/speech',{'text':'빨간 카드 네 장이 새로운 전체예요. 그중 별은 두 장이니까 확률은 이분의 일이에요.','voice':'Aoede','kind':'answer','consent':True})
+    with wave.open(io.BytesIO(base64.b64decode(speech['audio']))) as wav:
+     assert wav.getframerate()==24000 and wav.getnchannels()==1
+     report['natural_tts']={'model':speech['model'],'voice':speech['voice'],'seconds':round(time.monotonic()-started,2),'audio_seconds':round(wav.getnframes()/wav.getframerate(),2),'sample_rate':wav.getframerate(),'channels':wav.getnchannels()}
+    saved=''.join(f.read_text() for f in (cwd/'data').rglob('*.json'));assert speech['audio'] not in saved
+    report['tts_persisted']=False
    request('POST','/study/sessions/'+session['id']+'/end',{})
   finally:backend.terminate();backend.wait(timeout=10)
  report['private_data_embedded']=False

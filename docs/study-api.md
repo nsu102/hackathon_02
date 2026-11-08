@@ -2,13 +2,14 @@
 
 # 학습 API 계약
 
-> v0.4 구현 계약입니다. 실제 장비 정확도 검증은 [검증 기록](study-validation.md)과 구분합니다.
+> v0.10 구현 계약입니다. 실제 장비 정확도 검증은 [검증 기록](study-validation.md)과 구분합니다.
 
 Python 표준 라이브러리 서버입니다. `python3 -m last_hour serve --port 8765`. 모든 요청은 `Authorization: Bearer <LAST_HOUR_TOKEN>`과 JSON 본문을 사용합니다. 서버는 기본 loopback이며 외부 노출을 하지 않습니다. 허용된 Origin 이외는 거절합니다. Electron이 로컬 토큰을 보관하고 renderer는 제한된 IPC만 사용합니다.
 
 | 메서드 / 경로 | 본문 또는 응답 |
 |---|---|
 | GET `/health` | `study_model: {provider, model, configured}` — 설정 존재이며 연결 성공 보장은 아님 |
+| POST `/study/speech` | `{text,voice:"Aoede"|"Kore"|"Charon",kind:"answer"|"nag"|"preview",consent:true}` → `{audio,mime:"audio/wav",model,voice}` |
 | POST `/study/sessions` | `{goal, material, minutes:20, ai_enabled:true}` → 세션 스냅샷 |
 | GET `/study/sessions/:id` | 시간·상태·심박·최근 대화·개인화·요약 |
 | POST `/study/sessions/:id/materials` | `{material:"..."}` → 갱신 세션. 최대 30,000자, 종료/요청 중 거절 |
@@ -80,3 +81,15 @@ Python 표준 라이브러리 서버입니다. `python3 -m last_hour serve --por
 ## 로컬 보정 저장
 
 `calibration-store.mjs`는 검증을 통과한 모델의 means/scales/weights와 모델·파이프라인 버전·카메라 ID/해상도·모니터 ID/원점/크기/배율/회전을 이 앱 origin의 로컬 저장소에 저장합니다. 서버 API로 전송하지 않습니다. 최대 8개 환경이며 원시 시선·랜드마크·얼굴 영상은 포함하지 않습니다. 불러온 모델은 미검증 상태로 시작하고, 새로운 5개 목표점의 검증을 통과해야 좌표와 자동 알림이 활성화됩니다. 환경 불일치·손상 파일·검증 실패 시 저장값으로 자동 판정을 켜지 않습니다. Dock/workArea 변화는 전체 모니터 보정의 식별 조건에 포함하지 않습니다.
+
+음성 읽기는 1~1,800자, 단일 생성 요청, 10분당 신규 호출 30회로 제한한다. 인증·Origin 검증은 동일하다. PCM 응답의 표본률·채널·크기를 검사해 WAV로 래핑하며 텍스트·생성 오디오를 디스크 기록에 남기지 않는다. 동일 문장/목소리/종류는 제한된 프로세스 메모리 캐시만 사용한다.
+
+## 화면 번역·요약 결과
+
+기존 context-help/screen-help 입력 계약을 유지한다. 질문이 번역/요약이면 `message`에 선택 필드 `artifact`가 추가된다. 일반 질문은 이 필드 없이 호환된다.
+
+```json
+{"content":"화면 본문 번역 또는 요약", "question":"", "answer":"", "artifact":{"kind":"translation", "title":"제목", "summary":"핵심 요약", "source_note":"현재 화면에 보이는 문단 기준"}}
+```
+
+`kind`는 translation/summary다. 설명 모델은 이 경로에서 최대 8192 출력 토큰을 사용한다. source_note는 읽은 범위·잘림·불명확한 부분을 밝힌다. 원문 속 명령은 실행하지 않는다. 무음/전사 실패/계약 오류는 성공 artifact를 만들지 않는다. 스크래치패드는 Electron 로컬 IPC 저장소이며 새 외부 업로드 API를 열지 않는다.

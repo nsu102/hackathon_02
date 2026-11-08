@@ -1,10 +1,25 @@
 const {Hold}=require('./hold.cjs');
-module.exports=async function createVoice({win,display,api,systemPreferences,globalShortcut,desktopCapturer,pointer,screen,extraWindows=()=>[],onCapture=()=>{},keyHook=()=>require('uiohook-napi'),now=()=>performance.now(),wait=ms=>new Promise(r=>setTimeout(r,ms))}){
+module.exports=async function createVoice({win,display,api,systemPreferences,globalShortcut,desktopCapturer,pointer,screen,extraWindows=()=>[],onCapture=()=>{},onStart=()=>{},keyHook=()=>require('uiohook-napi'),now=()=>performance.now(),wait=ms=>new Promise(r=>setTimeout(r,ms))}){
  const {GazeBuffer,dipToPixels,inside}=await import('./focus.mjs');
- const buffer=new GazeBuffer();let enabled=false,session=null,hook=null,shortcut=null,keycode=null,frozen=null,timer=null,manual=null,uploading=false,epoch=0,screenPending=null,control='hotkey',targetMode='gaze';
+ const buffer=new GazeBuffer();let enabled=false,session=null,hook=null,shortcut=null,keycode=null,frozen=null,timer=null,manual=null,uploading=false,epoch=0,screenPending=null,control='hotkey',targetMode='gaze',hotkeyHeld=false,activationPending=false,ticket=0,capturing=false;
  const send=(type,data)=>{const w=win();if(w&&!w.isDestroyed())w.webContents.send('voice:event',{type,data});};
  const hold=new Hold((type,data)=>{if(type==='cancel'){clearTimeout(timer);frozen=null;manual=null;}send(type,data);});
- function cancel(reason='녹음을 취소했어요.'){epoch++;clearTimeout(timer);const idle=hold.state==='idle'&&(manual||uploading);hold.cancel(reason);frozen=null;manual=null;screenPending=null;if(idle)send('cancel',reason);}
+ function cancel(reason='녹음을 취소했어요.'){epoch++;ticket++;hotkeyHeld=false;activationPending=false;clearTimeout(timer);const idle=hold.state==='idle'&&(manual||uploading);hold.cancel(reason);frozen=null;manual=null;screenPending=null;if(idle)send('cancel',reason);}
+ function activate(){
+  if(!enabled){send('setup');return;}
+  if(hotkeyHeld||hold.state!=='idle'||uploading||manual)return;
+  hotkeyHeld=true;
+  if(session)return start('hotkey');
+  activationPending=true;send('activate',{ticket:++ticket});
+ }
+ function guide(accelerator='CommandOrControl+Shift+Enter'){
+  if(shortcut||enabled)return {registered:true};
+  if(!globalShortcut.register(accelerator,activate))throw new Error('음성 단축키가 다른 앱에서 사용 중이에요. 설정에서 바꿔주세요.');shortcut=accelerator;return {registered:true};
+ }
+ async function shortcutStart(data){
+  if(!enabled||!activationPending||!hotkeyHeld||data?.ticket!==ticket||!session)throw new Error('키를 놓았거나 준비가 취소돼 녹음하지 않았어요. 단축키를 누른 채 말해주세요.');
+  activationPending=false;return {started:await start('hotkey')};
+ }
  async function capture(){
   const d=display();if(!d)throw new Error('학습 모니터를 먼저 선택해주세요.');
   if(process.platform==='darwin'&&['denied','restricted'].includes(systemPreferences.getMediaAccessStatus('screen')))throw new Error('시스템 설정 → 개인정보 보호 및 보안 → 화면 및 시스템 오디오 녹음에서 Study Signal/Electron 화면 권한을 허용하고 앱을 다시 시작해주세요.');
@@ -20,12 +35,12 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   }finally{if(wv&&!w.isDestroyed())w.showInactive();if(pv&&p&&!p.isDestroyed())p.showInactive();extras.forEach(x=>{if(!x.isDestroyed())x.showInactive();});onCapture(false);}
  }
  async function start(input='hotkey',target=targetMode){
-  if(input==='hotkey'&&!enabled||!session||uploading||manual||frozen||screenPending)return false;
-  const id=hold.start();if(id===null)return false;control=input;
-  timer=setTimeout(()=>cancel('20초 제한 또는 키 해제 신호 누락으로 녹음을 폐기했어요.'),20000);
+  if(input==='hotkey'&&!enabled||!session||uploading||manual||frozen||screenPending||capturing)return false;
+  const id=hold.start();if(id===null)return false;control=input;onStart();
+  timer=setTimeout(()=>cancel('화면 캡처가 10초 안에 준비되지 않았어요. 앱을 다시 시작한 뒤 시도해주세요.'),10000);
   const candidate=buffer.freeze(now()),gaze=candidate&&String(candidate.display_id)===String(display()?.id)?candidate:null;
-  try{const frame=await capture();if(hold.id!==id||!hold.ready(id))return false;frozen={...frame,gaze,id,target};send('start',{id,control:input,attachment:{display_id:frame.display.display_id,...frame.image.getSize()}});return true;}
-  catch(e){cancel(e.message);return false;}
+  capturing=true;try{const frame=await capture();if(hold.id!==id||!hold.ready(id))return false;clearTimeout(timer);timer=setTimeout(()=>cancel('20초 제한 또는 키 해제 신호 누락으로 녹음을 폐기했어요.'),20000);frozen={...frame,gaze,id,target};send('start',{id,control:input,attachment:{display_id:frame.display.display_id,...frame.image.getSize()}});return true;}
+  catch(e){if(hold.id===id){cancel(e.message);if(input==='hotkey')send('failure',e.message);}if(input==='button')throw e;return false;}finally{capturing=false;}
  }
  async function buttonStart(data){
   if(data?.consent!==true)throw new Error('음성과 선택 모니터 화면을 OpenRouter로 보내는 데 동의해주세요.');
@@ -34,7 +49,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   const current=epoch;
   if(process.platform==='darwin'&&!await systemPreferences.askForMediaAccess('microphone'))throw new Error('마이크 권한을 허용해주세요.');
   if(current!==epoch)throw new Error('음성 질문을 취소했어요.');
-  if(!await start('button',data.target))throw new Error('녹음을 시작하지 못했어요. 화면 권한과 학습 상태를 확인해주세요.');
+  if(!await start('button',data.target))throw new Error('화면을 준비하는 동안 학습 상태가 바뀌었거나 질문이 취소됐어요. 다시 말하기를 눌러주세요.');
   return {started:true};
  }
  function buttonRelease(){if(control!=='button'||hold.state!=='recording')throw new Error('진행 중인 버튼 녹음이 없어요.');hold.release();}
@@ -50,9 +65,9 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   if(typeof accelerator!=='string'||! /^(CommandOrControl|Command|Control|Alt)(\+(Shift|Alt|Control))*\+(Enter|Space|F[1-9]|F1[0-2])$/.test(accelerator))throw new Error('단축키는 CommandOrControl+Shift+Enter 같은 조합을 사용해주세요.');
   const {uIOhook,UiohookKey}=keyHook();keycode=UiohookKey[accelerator.split('+').at(-1)];
   if(!keycode)throw new Error('지원하지 않는 단축키예요.');
-  if(!globalShortcut.register(accelerator,()=>start('hotkey')))throw new Error('단축키가 이미 사용 중이에요. 다른 조합을 선택해주세요.');
+  if(!globalShortcut.register(accelerator,activate))throw new Error('단축키가 이미 사용 중이에요. 다른 조합을 선택해주세요.');
   shortcut=accelerator;hook=uIOhook;
-  hook.on('keyup',e=>{if(e.keycode===UiohookKey.Escape){cancel();return;}if(e.keycode===keycode&&control==='hotkey')hold.release();});
+  hook.on('keyup',e=>{if(e.keycode===UiohookKey.Escape){cancel();return;}if(e.keycode===keycode){const pending=activationPending;hotkeyHeld=false;activationPending=false;ticket++;if(control==='hotkey')hold.release();if(pending)send('cancel','너무 짧게 눌러 녹음하지 않았어요. 준비가 끝날 때까지 누른 채 말해주세요.');}});
   hook.on('error',()=>cancel('키 해제 감지가 중단되어 녹음을 폐기했어요.'));
   try{hook.start();}catch{disable();throw new Error('입력 모니터링 권한을 확인하고 앱을 다시 시작해주세요.');}
   enabled=true;return {enabled:true,shortcut};
@@ -119,5 +134,5 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
    return result;
   }finally{uploading=false;}
  }
- return {configure,submit,select,cancel,disable,buttonStart,buttonRelease,screenPrepare,screenSubmit,sample:s=>{const onOverlay=[win(),...extraWindows()].some(w=>w&&!w.isDestroyed()&&w.isVisible()&&inside(s,w.getBounds()));const age=Number.isFinite(s.latency_ms)?Math.max(0,Math.min(2000,s.latency_ms)):0;buffer.add({...s,at_ms:now()-age,validity:onOverlay?'unknown':s.validity});},setSession:id=>{if(session!==id)cancel('학습 상태가 바뀌어 녹음을 폐기했어요.');session=id;},busy:()=>uploading};
+ return {configure,guide,shortcutStart,submit,select,cancel,disable,buttonStart,buttonRelease,screenPrepare,screenSubmit,sample:s=>{const onOverlay=[win(),...extraWindows()].some(w=>w&&!w.isDestroyed()&&w.isVisible()&&inside(s,w.getBounds()));const age=Number.isFinite(s.latency_ms)?Math.max(0,Math.min(2000,s.latency_ms)):0;buffer.add({...s,at_ms:now()-age,validity:onOverlay?'unknown':s.validity});},setSession:id=>{if(session!==id&&!activationPending)cancel('학습 상태가 바뀌어 녹음을 폐기했어요.');session=id;},busy:()=>uploading};
 };

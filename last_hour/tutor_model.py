@@ -48,15 +48,15 @@ class TutorModel:
         return {"provider": self.provider, "model": self.model,
                 "configured": bool(self.api_key) if self.provider == "openrouter" else bool(self.endpoint)}
 
-    def _send(self, messages):
+    def _send(self, messages, max_tokens=4096):
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = "Bearer " + self.api_key
         body = {"model": self.model, "messages": messages, "stream": False,
-                "max_tokens": 2048, "response_format": {"type": "json_object"}}
+                "max_tokens": max_tokens, "response_format": {"type": "json_object"}}
         request = Request(self.endpoint + "/chat/completions", data=json.dumps(body, ensure_ascii=False).encode(), headers=headers)
         try:
-            with build_opener(NoRedirect()).open(request, timeout=30) as response:
+            with build_opener(NoRedirect()).open(request, timeout=90) as response:
                 raw = response.read(4_000_001)
         except HTTPError as exc:
             code = exc.code
@@ -74,9 +74,9 @@ class TutorModel:
             raise ProviderError("모델 서버가 오류를 반환했어요.")
         return result
 
-    async def complete(self, messages):
+    async def complete(self, messages, *, max_tokens=4096):
         self.require()
         if self.provider == "openrouter":
             return await OpenRouterClient(self.hosted_settings).complete(model=self.model, messages=messages,
-                response_format={"type": "json_object"}, max_tokens=4096)
-        return await asyncio.to_thread(self._send, messages)
+                response_format={"type": "json_object"}, max_tokens=max_tokens)
+        return await asyncio.to_thread(self._send, messages, max_tokens)

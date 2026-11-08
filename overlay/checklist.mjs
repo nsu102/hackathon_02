@@ -1,0 +1,14 @@
+const $=id=>document.getElementById(id),bridge=window.checklistBridge;let state={},signature='',folded=localStorage.getItem('study-plan-folded')==='true';
+function fold(){$('panel').classList.toggle('folded',folded);$('fold').textContent=folded?'펼치기':'접기';$('fold').setAttribute('aria-expanded',String(!folded));localStorage.setItem('study-plan-folded',String(folded));}
+bridge.onState(value=>{
+ state=value;const plan=value.plan,items=plan?.items||[],done=items.filter(v=>v.done).length;
+ $('title').textContent=plan?.title||'오늘의 학습';$('progress-label').textContent=items.length?`${done} / ${items.length} 완료`:'공부할 자료를 넣어주세요';$('progress').max=items.length||1;$('progress').value=done;$('source').textContent=plan?.source==='ai'?'AI 학습 계획':plan?'자료 초안':'';$('files').textContent=plan?.sources?.join(' · ')||'직접 체크하면 진행이 저장돼요';
+ const note=value.error||(value.loading?'자료에서 학습 순서를 정리하고 있어요…':value.stale?'자료가 바뀌었어요. 새 목록을 준비해주세요.':items.length&&done===items.length?'오늘의 목록을 모두 마쳤어요.':'');$('status').textContent=note;$('status').hidden=!note;
+ const next=JSON.stringify([plan?.id,plan?.version,items,value.loading,value.stale,value.saving]);
+ if(next!==signature){signature=next;$('items').replaceChildren(...items.map(item=>{const li=document.createElement('li'),label=document.createElement('label'),check=document.createElement('input'),text=document.createElement('span');li.className=item.done?'done':'';check.type='checkbox';check.checked=item.done;check.disabled=Boolean(value.loading||value.stale||value.saving);check.setAttribute('aria-label',item.label);text.textContent=item.label;label.title=item.evidence;check.onchange=()=>{check.disabled=true;bridge.action('toggle',{id:item.id,done:check.checked}).catch(()=>{check.disabled=false;check.checked=item.done;});};label.append(check,text);li.append(label);return li;}));}
+ const gaze=value.gaze||{label:'시선 측정 꺼짐'},measured=Number.isFinite(gaze.horizontal_deg)&&Number.isFinite(gaze.vertical_deg);
+ $('gaze-state').textContent=gaze.label;$('gaze-dot').classList.toggle('on',Boolean(gaze.running&&measured));$('gaze-camera').textContent=gaze.running||gaze.loading?'측정 끄기':'측정 켜기';$('gaze-measurement').hidden=!measured;
+ if(measured){$('gaze-point').setAttribute('cx',String(50+Math.max(-40,Math.min(40,gaze.horizontal_deg))));$('gaze-point').setAttribute('cy',String(30+Math.max(-24,Math.min(24,gaze.vertical_deg))));$('gaze-values').textContent=`정면 기준 각도 변화\n가로 ${gaze.horizontal_deg.toFixed(1)}° · 세로 ${gaze.vertical_deg.toFixed(1)}°`;}
+ $('gaze-note').textContent=gaze.hint||'카메라를 켜면 눈과 머리 방향을 측정해요.';
+});
+$('fold').onclick=()=>{folded=!folded;fold();};$('settings').onclick=()=>bridge.action('settings');$('dismiss').onclick=()=>bridge.action('dismiss');$('gaze-camera').onclick=()=>bridge.action('camera');fold();new ResizeObserver(()=>bridge.resize(document.body.scrollHeight)).observe($('panel'));

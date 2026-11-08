@@ -11,12 +11,16 @@ from .config import ModelSettings
 from .openrouter import ProviderError
 from .tutor_model import TutorModel
 from .engine import Service, TERMINAL
+from .speech import SpeechService
+from .study_plan import StudyPlans
 
 
 MAX_BODY = 15_000_000
 
 
 def make_handler(service, token, allowed_origin):
+    speech = SpeechService()
+    plans = StudyPlans(service.study.root/'plans')
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
 
@@ -71,6 +75,17 @@ def make_handler(service, token, allowed_origin):
 
         def study_dispatch(self, method, parts):
             study = service.study
+            if method == 'POST' and parts == ['plans']:
+                self.reply(201, plans.create(self.body()))
+                return
+            if len(parts)>=2 and parts[0]=='plans':
+                if method=='GET' and len(parts)==2:self.reply(200,plans.get(parts[1]))
+                elif method=='POST' and len(parts)==4 and parts[2]=='items':self.reply(200,plans.update(parts[1],parts[3],self.body()))
+                else:self.reply(404,{'error':'Unknown checklist route'})
+                return
+            if method == 'POST' and parts == ['speech']:
+                self.reply(200, speech.create(self.body()))
+                return
             if method == "GET" and parts == ["heart"]:
                 self.reply(200, study.heart.status())
                 return

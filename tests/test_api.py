@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from http.server import ThreadingHTTPServer
 
 from last_hour.api import make_handler
@@ -13,6 +14,24 @@ from last_hour.models import Task
 
 
 class APITests(unittest.TestCase):
+    def test_checklist_routes_create_restore_and_update_without_model(self):
+        status,plan=self.request('POST','/study/plans',{'material':'1. 조건부 확률의 기준 이해하기\n조건에 해당하는 경우만 새로운 전체로 삼는다.','ai_enabled':False,'consent':False})
+        self.assertEqual(status,201)
+        path='/study/plans/'+plan['id']
+        self.assertEqual(self.request('GET',path,auth=False)[0],401)
+        status,updated=self.request('POST',path+'/items/'+plan['items'][0]['id'],{'done':True})
+        self.assertEqual(status,200);self.assertTrue(updated['items'][0]['done'])
+        self.assertEqual(self.request('GET',path)[1],updated)
+
+    def test_speech_route_requires_auth_consent_and_keeps_audio_out_of_records(self):
+        body={'text':'같이 풀어봐요.','voice':'Aoede','kind':'answer','consent':True}
+        with patch('last_hour.speech.synthesize',return_value={'audio':'test-wave-only','mime':'audio/wav'}) as provider:
+            self.assertEqual(self.request('POST','/study/speech',body,auth=False)[0],401)
+            self.assertEqual(self.request('POST','/study/speech',{**body,'consent':False})[0],400)
+            self.assertEqual(self.request('POST','/study/speech',body)[0],200)
+            self.assertEqual(provider.call_count,1)
+        self.assertFalse(any('test-wave-only' in file.read_text() for file in Path(self.tmp.name).rglob('*.json')))
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.service = Service(self.tmp.name)

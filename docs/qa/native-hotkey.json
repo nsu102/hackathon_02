@@ -1,0 +1,5 @@
+{
+  "fixture": "real macOS global shortcut and uiohook release; mocked screen; no microphone or network",
+  "accessibility": false,
+  "skipped": "Accessibility permission not granted"
+}

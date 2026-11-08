@@ -1,0 +1,16 @@
+{
+  "passed": [
+    "free text note",
+    "draft survives reload",
+    "local file attachment",
+    "pin setting",
+    "acknowledgement placeholder",
+    "translation and summary together",
+    "copy action",
+    "safe text rendering",
+    "delete entry",
+    "360/420/720px no overflow"
+  ],
+  "page_errors": [],
+  "environment": "headless Chrome; owned local IPC fixture"
+}

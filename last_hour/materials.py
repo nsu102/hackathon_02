@@ -1,5 +1,6 @@
 """Extract user-chosen study documents locally. Original files are never copied."""
 import json
+import re
 from pathlib import Path
 import sys
 import zipfile
@@ -24,11 +25,18 @@ def extract(path):
         reader=PdfReader(path)
         if reader.is_encrypted and not reader.decrypt(''):
             raise ValueError('비밀번호가 없는 PDF를 선택해주세요.')
-        pages=len(reader.pages);parts=[];length=0
-        for page in reader.pages[:min(40,pages)]:
-            part=page.extract_text() or '';parts.append(part);length+=len(part)
-            if length>=MAX_TEXT:truncated=True;break
-        text='\n\n'.join(parts);truncated=truncated or pages>40
+        pages=len(reader.pages);parts=[page.extract_text() or '' for page in reader.pages[:min(40,pages)]]
+        if not any(part.strip() for part in parts):raise ValueError('읽을 텍스트가 없어요. 스캔 PDF는 화면에 열고 스크린샷으로 질문해주세요.')
+        text='\n\n'.join(f'[페이지 {i+1}]\n{part}' for i,part in enumerate(parts))
+        if len(text)>MAX_TEXT:
+            # Keep all sampled pages and section headings instead of silently dropping later results.
+            budget=max(160,(MAX_TEXT-1000)//max(1,len(parts)));sampled=[]
+            for i,part in enumerate(parts):
+                headings='\n'.join(dict.fromkeys(line.strip() for line in part.splitlines() if re.match(r'^\d{1,2}(?:\.\d{1,2})*\s+[A-Za-z가-힣]',line.strip())))[:budget//3]
+                remaining=max(80,budget-len(headings));excerpt=part[:remaining*2//3]+'\n…\n'+part[-remaining//3:]
+                sampled.append(f'[페이지 {i+1} · 일부 발췌]\n{headings}\n{excerpt}')
+            text='\n\n'.join(sampled);truncated=True
+        truncated=truncated or pages>40
     elif kind=='.docx':
         with zipfile.ZipFile(path) as archive:
             info=archive.getinfo('word/document.xml')

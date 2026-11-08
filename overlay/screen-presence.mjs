@@ -31,6 +31,6 @@ export class ScreenPresence{
   const ratio=Math.max(...delta.map((v,i)=>v/radians(limits[i])));
   // Hysteresis prevents a boundary flicker from restarting the eight-second timer.
   this.state=ratio>(this.state==='away'?.8:1)?'away':'on_screen';
-  return {ready:true,state:this.state,reason:this.state==='away'?'direction_away':'screen_facing'};
+  return {ready:true,state:this.state,reason:this.state==='away'?'direction_away':'screen_facing',horizontal_deg:(current[0]-this.reference[0])*180/Math.PI,vertical_deg:(current[1]-this.reference[1])*180/Math.PI};
  }
 }

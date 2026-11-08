@@ -1,12 +1,12 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {EventEmitter} from 'node:events';
 import createVoice from '../native-voice.cjs';
-async function fixture({captureWait=async()=>{},configure=true,extraWindows=()=>[],onCapture=()=>{}}={}){
+async function fixture({captureWait=async()=>{},configure=true,extraWindows=()=>[],onCapture=()=>{},captureError=null}={}){
  let micState='granted',now=0,visible=true,pointVisible=true,pressed;const sent=[],crops=[],order=[],hook=new EventEmitter();hook.start=()=>{};hook.stop=()=>{};
  const image={isEmpty:()=>false,getSize:()=>({width:2880,height:1800}),crop:r=>{crops.push(r);return {getSize:()=>({width:r.width,height:r.height}),toPNG:()=>Buffer.from('fixture')};},toDataURL:()=> 'data:image/png;base64,fixture'};
  const win={isDestroyed:()=>false,isVisible:()=>visible,getBounds:()=>({x:-500,y:0,width:400,height:600}),hide:()=>{visible=false;order.push('hide-overlay');},showInactive:()=>{visible=true;order.push('restore-overlay');},webContents:{send:(_,event)=>sent.push(event)}};
  const pointer={isVisible:()=>pointVisible,hide:()=>{pointVisible=false;order.push('hide-pointer');},isDestroyed:()=>false,showInactive:()=>{pointVisible=true;order.push('restore-pointer');}};
  const apiCalls=[];
- const voice=await createVoice({win:()=>win,display:()=>({id:2,bounds:{x:-1440,y:0,width:1440,height:900},scaleFactor:2}),api:async(...args)=>{apiCalls.push(args);return {message:{content:'fixture'}};},systemPreferences:{getMediaAccessStatus:type=>type==='microphone'?micState:'granted',isTrustedAccessibilityClient:()=>true,askForMediaAccess:async()=>true},globalShortcut:{register:(_,callback)=>{pressed=callback;return true;},unregister:()=>{}},desktopCapturer:{getSources:async()=>{assert.equal(visible,false);assert.equal(pointVisible,false);order.push('capture');return [{display_id:'2',thumbnail:image}];}},pointer:()=>pointer,extraWindows,onCapture,screen:{},keyHook:()=>({uIOhook:hook,UiohookKey:{Enter:28,Escape:1}}),now:()=>now,wait:captureWait});
+ const voice=await createVoice({win:()=>win,display:()=>({id:2,bounds:{x:-1440,y:0,width:1440,height:900},scaleFactor:2}),api:async(...args)=>{apiCalls.push(args);return {message:{content:'fixture'}};},systemPreferences:{getMediaAccessStatus:type=>type==='microphone'?micState:'granted',isTrustedAccessibilityClient:()=>true,askForMediaAccess:async()=>true},globalShortcut:{register:(_,callback)=>{pressed=callback;return true;},unregister:()=>{}},desktopCapturer:{getSources:async()=>{assert.equal(visible,false);assert.equal(pointVisible,false);order.push('capture');if(captureError)throw new Error(captureError);return [{display_id:'2',thumbnail:image}];}},pointer:()=>pointer,extraWindows,onCapture,screen:{},keyHook:()=>({uIOhook:hook,UiohookKey:{Enter:28,Escape:1}}),now:()=>now,wait:captureWait});
  if(configure)await voice.configure({enabled:true,consent:true,shortcut:'CommandOrControl+Shift+Enter'});voice.setSession('fixture-session');
  for(let t=0;t<=1000;t+=100){now=t;voice.sample({x:-1000,y:450,at_ms:t,validity:'valid',validated:true,pose_ok:true,calibration_id:'cal-1',display_id:2,validation_error_px:30});}
  return {voice,press:()=>pressed(),hook,sent,apiCalls,crops,order,setMic:s=>micState=s,setTime:t=>now=t};
@@ -75,4 +75,21 @@ test('chat bubbles are hidden during the captured frame and restored without foc
  let visible=true;const guarded=[];const bubble={isDestroyed:()=>false,isVisible:()=>visible,getBounds:()=>({x:-400,y:650,width:350,height:200}),hide:()=>{visible=false;},showInactive:()=>{visible=true;}};
  const f=await fixture({configure:false,extraWindows:()=>[bubble],onCapture:v=>guarded.push(v),captureWait:async()=>{assert.equal(visible,false);}});
  await f.voice.buttonStart({consent:true,target:'screen'});assert.deepEqual(guarded,[true,false]);assert.equal(visible,true);f.voice.disable();
+});
+
+test('button capture reports the original failure and restores windows instead of calling it a permission denial',async()=>{const f=await fixture({configure:false,captureError:'선택한 모니터 캡처가 실패했어요.'});await assert.rejects(()=>f.voice.buttonStart({consent:true,target:'screen'}),/선택한 모니터 캡처/);assert.ok(f.order.includes('restore-overlay'));assert.equal(f.apiCalls.length,0);f.voice.disable();});
+
+test('shortcut without a session requests preparation once and starts only while still held',async()=>{
+ const f=await fixture();f.voice.setSession(null);f.sent.length=0;
+ await f.press();await f.press();const activations=f.sent.filter(e=>e.type==='activate');assert.equal(activations.length,1);assert.equal(f.order.length,0);
+ f.voice.setSession('new-session');await f.voice.shortcutStart(activations[0].data);assert.equal(f.sent.filter(e=>e.type==='start').length,1);
+ await f.press();assert.equal(f.sent.filter(e=>e.type==='start').length,1);f.hook.emit('keyup',{keycode:28});f.voice.cancel();f.voice.disable();
+});
+test('release or cancellation before session setup prevents late capture and upload',async()=>{
+ for(const cancel of [false,true]){const f=await fixture();f.voice.setSession(null);await f.press();const pending=f.sent.find(e=>e.type==='activate').data;
+ if(cancel)f.voice.cancel();else f.hook.emit('keyup',{keycode:28});f.voice.setSession('late-session');
+ await assert.rejects(()=>f.voice.shortcutStart(pending),/취소|키를/);assert.equal(f.order.length,0);assert.equal(f.apiCalls.length,0);f.voice.disable();}
+});
+test('unconfigured shortcut opens setup without microphone, capture or recording',async()=>{
+ const f=await fixture({configure:false});f.voice.guide();await f.press();assert.equal(f.sent.at(-1).type,'setup');assert.equal(f.order.length,0);assert.equal(f.apiCalls.length,0);f.voice.disable();
 });

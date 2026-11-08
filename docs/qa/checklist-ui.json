@@ -1,0 +1,13 @@
+{
+  "passed": [
+    "progress",
+    "manual toggle",
+    "fold/unfold",
+    "stale data disabled",
+    "untrusted text stays text",
+    "330px no overflow",
+    "settings action",
+    "dismiss action"
+  ],
+  "page_errors": []
+}

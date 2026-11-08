@@ -1,0 +1,5 @@
+FROM pytorch/pytorch:2.8.0-cuda12.8-cudnn9-runtime
+COPY vision-requirements.txt /tmp/vision-requirements.txt
+RUN python -m pip install --no-cache-dir -r /tmp/vision-requirements.txt
+ENV HF_HUB_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 TOKENIZERS_PARALLELISM=false
+WORKDIR /work

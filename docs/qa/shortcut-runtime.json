@@ -1,0 +1,15 @@
+{
+  "main_talk_buttons": 0,
+  "idle_bubble_pages": 0,
+  "settings_voice_consent": 1,
+  "shortcut": "CommandOrControl+Shift+Enter",
+  "permission": {
+    "microphone": "granted",
+    "screen": "granted",
+    "camera": "granted",
+    "accessibility": false,
+    "runtime": "Electron",
+    "version": "0.10.0"
+  },
+  "scope": "read-only checks of owned running app; no screenshot/audio/network request"
+}

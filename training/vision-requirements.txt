@@ -1,0 +1,7 @@
+# CUDA image already supplies torch 2.8.0. Record pip freeze alongside each run.
+transformers==5.22.2
+trl==1.17.1
+peft==0.21.2
+datasets==5.1.0
+accelerate==1.15.0
+pillow>=11

@@ -1,0 +1,39 @@
+{
+  "fixture": "authored probability notes only; no user PDF",
+  "source": "ai",
+  "seconds": 3.99,
+  "items": [
+    {
+      "id": "90651a9e0ee59f91",
+      "label": "조건부 확률에서 조건에 해당하는 경우만 새로운 전체로 삼는다는 기준을 내 말로 정리하기",
+      "evidence": "조건부 확률은 조건에 해당하는 경우만 새로운 전체로 삼는다.",
+      "done": false
+    },
+    {
+      "id": "368d49863b8155fb",
+      "label": "카드 예시의 상황(빨간 카드 네 장 중 별 표시 두 장)을 그려 보며 확인하기",
+      "evidence": "빨간 카드 네 장 중 별 표시는 두 장이다.",
+      "done": false
+    },
+    {
+      "id": "c491725659116327",
+      "label": "빨간 카드라는 조건 아래 별 확률이 이분의 일이 되는 과정을 단계별로 설명해 보기",
+      "evidence": "빨간 카드라는 조건 아래 별 확률은 이분의 일이다.",
+      "done": false
+    },
+    {
+      "id": "3a04ce398acd0df0",
+      "label": "독립 사건에서는 조건을 주어도 확률이 변하지 않는다는 점을 카드 예시와 비교해 말해 보기",
+      "evidence": "독립이면 조건을 주어도 사건의 확률은 변하지 않는다.",
+      "done": false
+    },
+    {
+      "id": "84dd9d30cbc256f5",
+      "label": "기준, 카드 계산, 독립 비교를 이어서 조건부 확률 설명을 처음부터 끝까지 말해 보기",
+      "evidence": "조건부 확률은 조건에 해당하는 경우만 새로운 전체로 삼는다.",
+      "done": false
+    }
+  ],
+  "source_evidence_validated": true,
+  "progress_restored": true
+}

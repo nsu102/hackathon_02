@@ -13,3 +13,5 @@ training/cache/
 *.dmg
 *.app/
 .DS_Store
+
+adapters/
