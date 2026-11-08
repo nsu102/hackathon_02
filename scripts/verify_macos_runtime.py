@@ -8,7 +8,7 @@ import argparse,http.client,json,os,secrets,socket,subprocess,tempfile,time,base
 ROOT=Path(__file__).resolve().parents[1]
 
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('service',type=Path);parser.add_argument('weights',type=Path);parser.add_argument('--live',action='store_true');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('service',type=Path);parser.add_argument('weights',type=Path);parser.add_argument('--live',action='store_true');parser.add_argument('--report',default='macos-runtime.json');args=parser.parse_args()
  import sys
  sys.path.insert(0,str(ROOT))
  from last_hour.config import load_env
@@ -74,6 +74,6 @@ def main():
    request('POST','/study/sessions/'+session['id']+'/end',{})
   finally:backend.terminate();backend.wait(timeout=10)
  report['private_data_embedded']=False
- out=ROOT/'docs/qa/macos-runtime.json';out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+ out=ROOT/'docs/qa'/args.report;out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
  print(json.dumps(report,ensure_ascii=False))
 if __name__=='__main__':main()

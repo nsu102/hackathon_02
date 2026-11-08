@@ -46,6 +46,7 @@ with sync_playwright() as p:
  page.locator('#settings-toggle').click();page.locator('#read-answer').uncheck();page.locator('#nag-mute').check();page.locator('#settings-toggle').click()
  page.evaluate('''()=>{const at=performance.now()+22000;for(let t=at-21000;t<=at;t+=100)window.injectGaze({at_ms:t,validated:false,validity:'unknown',pose_ok:false,presence:{ready:true,state:'away',reason:'direction_away'}});}''')
  assert page.locator('#focus-notice').is_visible();assert '화면 이탈' in page.locator('#focus-state').inner_text()
+ assert page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&a.data.kind==='nag'&&a.data.show)")
  page.locator('#focus-correction').click();assert page.locator('#focus-notice').is_hidden()
  page.evaluate("window.appAction({action:'settings'})");page.locator('#settings').wait_for(state='visible')
  page.locator('#precise-settings>summary').click();page.locator('#study-region').click();page.locator('#region-editor').wait_for(state='visible')
@@ -58,6 +59,7 @@ with sync_playwright() as p:
  assert page.evaluate("window.actions.filter(a=>a.action==='voice-submit').length")==0
  page.wait_for_timeout(1200);page.locator('#voice-talk').click()
  page.wait_for_function("() => document.getElementById('chat').textContent.includes('빨간 카드 4장')")
+ assert page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&a.data.kind==='answer'&&a.data.attachment&&a.data.materials===1)")
  audio=page.evaluate("window.actions.find(a=>a.action==='voice-submit').data")
  assert audio['id']==1 and audio['speech_detected'] and audio['audio'].startswith('GkXf')
  assert not page.evaluate("window.actions.some(a=>a.action==='voice-configure')"),'button path must not require global hooks'

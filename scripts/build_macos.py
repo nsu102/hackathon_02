@@ -33,6 +33,17 @@ def service():
  command+=[ROOT/'scripts/bundled_service.py']
  with (BUILD/'service-build.log').open('w') as log:run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,env={**os.environ,'PYINSTALLER_CONFIG_DIR':str(BUILD/'pyinstaller-cache'),'HF_HUB_OFFLINE':'1'})
 
+def add_notices(resources):
+ site=ROOT/'.gaze-venv/lib/python3.13/site-packages'
+ target=resources/'third-party-notices';target.mkdir(exist_ok=True)
+ for dist in site.glob('*.dist-info'):
+  for file in dist.rglob('*'):
+   if not file.is_file():continue
+   if 'license' in file.name.lower() or file.name.lower().startswith(('copying','notice','authors')) or 'licenses' in file.relative_to(dist).parts:
+    destination=target/dist.name/file.relative_to(dist);destination.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(file,destination)
+ python_license=Path(subprocess.check_output([str(ROOT/'.gaze-venv/bin/python'),'-c','import sysconfig; print(sysconfig.get_path("stdlib"))'],text=True).strip())/'LICENSE.txt'
+ if python_license.exists():shutil.copy2(python_license,target/'Python-LICENSE.txt')
+
 def build_app():
  staging=BUILD/'dmg';staging.mkdir(exist_ok=True)
  app=staging/'Study Signal.app'
@@ -51,6 +62,7 @@ def build_app():
  for name in ['@mediapipe','@fontsource','uiohook-napi','node-gyp-build']:
   shutil.copytree(ROOT/'overlay/node_modules'/name,modules/name,symlinks=True)
  shutil.copytree(BUILD/'service-dist/study-service',resources/'service',symlinks=True)
+ add_notices(resources)
  models=resources/'models/unigaze';models.mkdir(parents=True)
  shutil.copy2(ROOT/'data/models/unigaze/unigaze_l16_joint.safetensors',models/'unigaze_l16_joint.safetensors')
  shutil.copytree(ROOT/'last_hour/neural_assets',resources/'model-notices')
