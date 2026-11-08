@@ -1,0 +1,502 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1AB6B1913BAAC13F33E46B09 /* SleepEnvWatch.app in Embed Dependencies */ = {isa = PBXBuildFile; fileRef = 38AEE8F6866990286E6394DA /* SleepEnvWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1C9CAE90B8F644F130A163F1 /* ConnectivityHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBCAE68DD4D06C46FB72C89 /* ConnectivityHub.swift */; };
+		27FA04F42681C7D57CA41B1C /* SensorMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1B9F4D640A254D2A636D79 /* SensorMonitor.swift */; };
+		2DB3D17A33021F452A3CF1F2 /* ConnectivityHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADBCAE68DD4D06C46FB72C89 /* ConnectivityHub.swift */; };
+		3C24894F489C9A0F620504FC /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 717EE438332BB683C67A32F7 /* CoreMotion.framework */; };
+		446B96A68D1DC69527E17C10 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D43587D00B8A9514E69A5FEE /* ContentView.swift */; };
+		451566B53BE6AF5982DF0AE2 /* HealthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56EA4685489EEC4080663E28 /* HealthManager.swift */; };
+		515BD929C84942D30772D788 /* SimulatedHeartRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A927F203222B3B23C976C7 /* SimulatedHeartRate.swift */; };
+		63BD5F7C6190E73B02E2DB30 /* SleepEnvApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECC3370E214532C957A84B40 /* SleepEnvApp.swift */; };
+		786D9A89917D15F73D37D552 /* HeartRateSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C116E5ED456E53F8760241 /* HeartRateSession.swift */; };
+		7B9ABCDD934D1128F22FE7E0 /* SensorCheckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC17154A8DE079F5F3C4732 /* SensorCheckView.swift */; };
+		966DBFDB762BD432DB5048AB /* SleepEnvApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C46833DC5CF9676F649A41 /* SleepEnvApp.swift */; };
+		9ED4B0F36075736EF3DC2028 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBA8ACBBFE4ADF0385763AEC /* HealthKit.framework */; };
+		B3D2942997FEEBF267AD327E /* ExternalHeartRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69BB23ED2FFE92109CE7DA03 /* ExternalHeartRate.swift */; };
+		BCC85F433F04752990D38E92 /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BD10C15B59F613F39C5B8D9 /* WatchConnectivity.framework */; };
+		C66317E08FD55073C5A197EB /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EBA8ACBBFE4ADF0385763AEC /* HealthKit.framework */; };
+		EDFE5C19E13F4B1B4C4AC0EF /* WatchConnectivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4BD10C15B59F613F39C5B8D9 /* WatchConnectivity.framework */; };
+		EFFB7400A8C6AC2DF6A571E2 /* SleepMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECBA199293CAEA2EC72FA495 /* SleepMetrics.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6C18D28507F01A598396FBF5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2ADA466F48E129C06031C86C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4932CCCC5D41C64E879A86C9;
+			remoteInfo = SleepEnvWatch;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		07ACAB27835510F045D3897C /* Embed Dependencies */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				1AB6B1913BAAC13F33E46B09 /* SleepEnvWatch.app in Embed Dependencies */,
+			);
+			name = "Embed Dependencies";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08C116E5ED456E53F8760241 /* HeartRateSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartRateSession.swift; sourceTree = "<group>"; };
+		225DFB1BD72488A46DEA2559 /* SleepEnv.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SleepEnv.entitlements; sourceTree = "<group>"; };
+		24C46833DC5CF9676F649A41 /* SleepEnvApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepEnvApp.swift; sourceTree = "<group>"; };
+		38AEE8F6866990286E6394DA /* SleepEnvWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SleepEnvWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3ECB0FB6386E009353BBC741 /* SleepEnv.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SleepEnv.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		480DEB6FF8E6599B31EA7A81 /* SleepEnv.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SleepEnv.entitlements; sourceTree = "<group>"; };
+		4BD10C15B59F613F39C5B8D9 /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
+		4D1B9F4D640A254D2A636D79 /* SensorMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorMonitor.swift; sourceTree = "<group>"; };
+		56EA4685489EEC4080663E28 /* HealthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthManager.swift; sourceTree = "<group>"; };
+		69BB23ED2FFE92109CE7DA03 /* ExternalHeartRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalHeartRate.swift; sourceTree = "<group>"; };
+		6FC17154A8DE079F5F3C4732 /* SensorCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorCheckView.swift; sourceTree = "<group>"; };
+		717EE438332BB683C67A32F7 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
+		72DE633E5744C29E3BDACCB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A1A927F203222B3B23C976C7 /* SimulatedHeartRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatedHeartRate.swift; sourceTree = "<group>"; };
+		ADBCAE68DD4D06C46FB72C89 /* ConnectivityHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityHub.swift; sourceTree = "<group>"; };
+		BC2BCF820055214070424AC1 /* SleepEnvWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SleepEnvWatch.entitlements; sourceTree = "<group>"; };
+		BDEDACBDF5D7A5CB5AA73F78 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		D43587D00B8A9514E69A5FEE /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		EBA8ACBBFE4ADF0385763AEC /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = System/Library/Frameworks/HealthKit.framework; sourceTree = SDKROOT; };
+		ECBA199293CAEA2EC72FA495 /* SleepMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepMetrics.swift; sourceTree = "<group>"; };
+		ECC3370E214532C957A84B40 /* SleepEnvApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepEnvApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		95C445E4835C3FB85D2A09CB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C66317E08FD55073C5A197EB /* HealthKit.framework in Frameworks */,
+				EDFE5C19E13F4B1B4C4AC0EF /* WatchConnectivity.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF63C11BA7B519FBCA019AB9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9ED4B0F36075736EF3DC2028 /* HealthKit.framework in Frameworks */,
+				BCC85F433F04752990D38E92 /* WatchConnectivity.framework in Frameworks */,
+				3C24894F489C9A0F620504FC /* CoreMotion.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0780B3EBCB7BF4E1028E2145 /* SleepEnviOS */ = {
+			isa = PBXGroup;
+			children = (
+				D43587D00B8A9514E69A5FEE /* ContentView.swift */,
+				69BB23ED2FFE92109CE7DA03 /* ExternalHeartRate.swift */,
+				56EA4685489EEC4080663E28 /* HealthManager.swift */,
+				BDEDACBDF5D7A5CB5AA73F78 /* Info.plist */,
+				480DEB6FF8E6599B31EA7A81 /* SleepEnv.entitlements */,
+				24C46833DC5CF9676F649A41 /* SleepEnvApp.swift */,
+				ECBA199293CAEA2EC72FA495 /* SleepMetrics.swift */,
+			);
+			path = SleepEnviOS;
+			sourceTree = "<group>";
+		};
+		36D269D564464B70909844B2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3ECB0FB6386E009353BBC741 /* SleepEnv.app */,
+				38AEE8F6866990286E6394DA /* SleepEnvWatch.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BC6D1D8808A9128D1203E411 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				717EE438332BB683C67A32F7 /* CoreMotion.framework */,
+				EBA8ACBBFE4ADF0385763AEC /* HealthKit.framework */,
+				4BD10C15B59F613F39C5B8D9 /* WatchConnectivity.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C773062FA4A2122F2B490268 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				ADBCAE68DD4D06C46FB72C89 /* ConnectivityHub.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		E25CA53D680CB07A4050AB44 = {
+			isa = PBXGroup;
+			children = (
+				C773062FA4A2122F2B490268 /* Shared */,
+				0780B3EBCB7BF4E1028E2145 /* SleepEnviOS */,
+				F371086AA8F52AC99EF85E90 /* SleepEnvWatch */,
+				BC6D1D8808A9128D1203E411 /* Frameworks */,
+				36D269D564464B70909844B2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F371086AA8F52AC99EF85E90 /* SleepEnvWatch */ = {
+			isa = PBXGroup;
+			children = (
+				08C116E5ED456E53F8760241 /* HeartRateSession.swift */,
+				72DE633E5744C29E3BDACCB0 /* Info.plist */,
+				6FC17154A8DE079F5F3C4732 /* SensorCheckView.swift */,
+				4D1B9F4D640A254D2A636D79 /* SensorMonitor.swift */,
+				A1A927F203222B3B23C976C7 /* SimulatedHeartRate.swift */,
+				225DFB1BD72488A46DEA2559 /* SleepEnv.entitlements */,
+				ECC3370E214532C957A84B40 /* SleepEnvApp.swift */,
+				BC2BCF820055214070424AC1 /* SleepEnvWatch.entitlements */,
+			);
+			path = SleepEnvWatch;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4932CCCC5D41C64E879A86C9 /* SleepEnvWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EC19822162F6BA14D2A1E3E7 /* Build configuration list for PBXNativeTarget "SleepEnvWatch" */;
+			buildPhases = (
+				85F87D988E0233144B1A8B7D /* Sources */,
+				FF63C11BA7B519FBCA019AB9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SleepEnvWatch;
+			packageProductDependencies = (
+			);
+			productName = SleepEnvWatch;
+			productReference = 38AEE8F6866990286E6394DA /* SleepEnvWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		705FA2476ED7833DDD3AD881 /* SleepEnv */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 05FE7D5C7217943003AF05CE /* Build configuration list for PBXNativeTarget "SleepEnv" */;
+			buildPhases = (
+				E3AAAD66EB4B0C49F2B11001 /* Sources */,
+				95C445E4835C3FB85D2A09CB /* Frameworks */,
+				07ACAB27835510F045D3897C /* Embed Dependencies */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D82F1BCF4F56417C2BE9148C /* PBXTargetDependency */,
+			);
+			name = SleepEnv;
+			packageProductDependencies = (
+			);
+			productName = SleepEnv;
+			productReference = 3ECB0FB6386E009353BBC741 /* SleepEnv.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2ADA466F48E129C06031C86C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					4932CCCC5D41C64E879A86C9 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					705FA2476ED7833DDD3AD881 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 803385BFD08B10EBD6CDCE34 /* Build configuration list for PBXProject "SleepEnv" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E25CA53D680CB07A4050AB44;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 36D269D564464B70909844B2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				705FA2476ED7833DDD3AD881 /* SleepEnv */,
+				4932CCCC5D41C64E879A86C9 /* SleepEnvWatch */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		85F87D988E0233144B1A8B7D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2DB3D17A33021F452A3CF1F2 /* ConnectivityHub.swift in Sources */,
+				786D9A89917D15F73D37D552 /* HeartRateSession.swift in Sources */,
+				7B9ABCDD934D1128F22FE7E0 /* SensorCheckView.swift in Sources */,
+				27FA04F42681C7D57CA41B1C /* SensorMonitor.swift in Sources */,
+				515BD929C84942D30772D788 /* SimulatedHeartRate.swift in Sources */,
+				63BD5F7C6190E73B02E2DB30 /* SleepEnvApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E3AAAD66EB4B0C49F2B11001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C9CAE90B8F644F130A163F1 /* ConnectivityHub.swift in Sources */,
+				446B96A68D1DC69527E17C10 /* ContentView.swift in Sources */,
+				B3D2942997FEEBF267AD327E /* ExternalHeartRate.swift in Sources */,
+				451566B53BE6AF5982DF0AE2 /* HealthManager.swift in Sources */,
+				966DBFDB762BD432DB5048AB /* SleepEnvApp.swift in Sources */,
+				EFFB7400A8C6AC2DF6A571E2 /* SleepMetrics.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D82F1BCF4F56417C2BE9148C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4932CCCC5D41C64E879A86C9 /* SleepEnvWatch */;
+			targetProxy = 6C18D28507F01A598396FBF5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3672C8075C0B2DB5EE2A890C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		46588685E41DAF25F796608A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		75776B5C43787773718E9B5F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SleepEnviOS/SleepEnv.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = SleepEnviOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimyeeun.SleepEnv;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		867324DC87F800E1987D5ACB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SleepEnviOS/SleepEnv.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = SleepEnviOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimyeeun.SleepEnv;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A641DB309A06EECD2A5D551D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SleepEnvWatch/SleepEnvWatch.entitlements;
+				INFOPLIST_FILE = SleepEnvWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimyeeun.SleepEnv.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
+		ACE766C0EDDBE644BDD6CCF8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = SleepEnvWatch/SleepEnvWatch.entitlements;
+				INFOPLIST_FILE = SleepEnvWatch/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kimyeeun.SleepEnv.watchkitapp;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05FE7D5C7217943003AF05CE /* Build configuration list for PBXNativeTarget "SleepEnv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				75776B5C43787773718E9B5F /* Debug */,
+				867324DC87F800E1987D5ACB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		803385BFD08B10EBD6CDCE34 /* Build configuration list for PBXProject "SleepEnv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3672C8075C0B2DB5EE2A890C /* Debug */,
+				46588685E41DAF25F796608A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		EC19822162F6BA14D2A1E3E7 /* Build configuration list for PBXNativeTarget "SleepEnvWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A641DB309A06EECD2A5D551D /* Debug */,
+				ACE766C0EDDBE644BDD6CCF8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2ADA466F48E129C06031C86C /* Project object */;
+}
