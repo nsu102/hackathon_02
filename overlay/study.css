@@ -19,3 +19,5 @@
 .material-list{list-style:none;margin:8px 0;padding:0}.material-list li{display:flex;gap:8px;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:7px 0;font-size:11px}.material-list span{min-width:0;overflow-wrap:anywhere}.material-list button{font-size:11px;color:var(--muted);flex:none}#material-note{margin:5px 0 8px}#voice-attachment{color:var(--accent)}
 
 .checklist-editor{list-style:none;padding:0}.checklist-editor li{padding:10px 0;border-bottom:1px solid #ffffff14}.checklist-editor li>div{display:flex;gap:8px;align-items:center}.checklist-editor input[type=text]{min-width:0;flex:1}.checklist-editor details{font-size:11px;line-height:1.6;color:#b2b9aa;margin-left:24px;overflow-wrap:anywhere}.checklist-editor summary{cursor:pointer}
+
+#gaze-addon-settings{padding:8px 0}#gaze-addon-status{font-size:12px;color:var(--muted);margin:10px 0}#gaze-addon-progress{width:100%;accent-color:var(--accent);margin-bottom:10px}#gaze-addon-cancel{margin-left:12px}

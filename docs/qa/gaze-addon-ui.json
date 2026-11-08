@@ -1,0 +1,14 @@
+{
+  "passed": [
+    "missing-component label",
+    "single install action",
+    "progress percentage",
+    "install and camera controls locked while busy",
+    "cancel and retry",
+    "installed state",
+    "no automatic camera or model start",
+    "new study can enable gaze after installing during this app run"
+  ],
+  "page_errors": [],
+  "environment": "headless Chrome; owned installer fixture"
+}

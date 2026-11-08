@@ -28,10 +28,10 @@ def icon():
  run(['/usr/bin/iconutil','-c','icns',folder,'-o',BUILD/'StudySignal.icns'])
 
 def service():
- command=[ROOT/'.gaze-venv/bin/python','-m','PyInstaller','--noconfirm','--clean','--onedir','--target-arch','arm64','--name','study-service','--distpath',BUILD/'service-dist','--workpath',BUILD/'pyinstaller','--specpath',BUILD,'--paths',ROOT,'--additional-hooks-dir',ROOT/'scripts/pyinstaller_hooks','--add-data',str(ROOT/'last_hour/prompts.md')+':last_hour','--collect-data','timm','--collect-data','torch','--copy-metadata','timm','--copy-metadata','torch','--collect-submodules','timm.models','--hidden-import','torchvision','--hidden-import','certifi']
- for module in ['matplotlib','scipy','pandas','tensorflow','tkinter','IPython','pytest','openai','playwright','onnx','onnxruntime']:command+=['--exclude-module',module]
- command+=[ROOT/'scripts/bundled_service.py']
- with (BUILD/'service-build.log').open('w') as log:run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,env={**os.environ,'PYINSTALLER_CONFIG_DIR':str(BUILD/'pyinstaller-cache'),'HF_HUB_OFFLINE':'1'})
+ command=[ROOT/'.gaze-venv/bin/python','-m','PyInstaller','--noconfirm','--clean','--onedir','--target-arch','arm64','--name','study-service','--distpath',BUILD/'core-service-dist','--workpath',BUILD/'core-pyinstaller','--specpath',BUILD,'--paths',ROOT,'--add-data',str(ROOT/'last_hour/prompts.md')+':last_hour','--hidden-import','certifi','--hidden-import','pypdf']
+ for module in ['torch','torchvision','timm','cv2','numpy','PIL','safetensors','huggingface_hub','hf_xet','matplotlib','scipy','pandas','tensorflow','tkinter','IPython','pytest','openai','playwright','onnx','onnxruntime']:command+=['--exclude-module',module]
+ command+=[ROOT/'scripts/bundled_core.py']
+ with (BUILD/'core-service-build.log').open('w') as log:run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,env={**os.environ,'PYINSTALLER_CONFIG_DIR':str(BUILD/'pyinstaller-cache'),'HF_HUB_OFFLINE':'1'})
 
 def add_notices(resources):
  site=ROOT/'.gaze-venv/lib/python3.13/site-packages'
@@ -61,11 +61,9 @@ def build_app():
  # Current UI dependencies; experimental ONNX modules have no role in this build.
  for name in ['@mediapipe','@fontsource','uiohook-napi','node-gyp-build']:
   shutil.copytree(ROOT/'overlay/node_modules'/name,modules/name,symlinks=True)
- shutil.copytree(BUILD/'service-dist/study-service',resources/'service',symlinks=True)
+ shutil.copytree(BUILD/'core-service-dist/study-service',resources/'service',symlinks=True)
+ shutil.copy2(BUILD/'gaze-addon.json',resources/'gaze-addon.json')
  add_notices(resources)
- models=resources/'models/unigaze';models.mkdir(parents=True)
- shutil.copy2(ROOT/'data/models/unigaze/unigaze_l16_joint.safetensors',models/'unigaze_l16_joint.safetensors')
- shutil.copytree(ROOT/'last_hour/neural_assets',resources/'model-notices')
  shutil.copy2(ROOT/'.env.example',resources/'defaults.env')
  shutil.copy2(BUILD/'StudySignal.icns',resources/'StudySignal.icns')
  version=json.loads((ROOT/'overlay/package.json').read_text())['version']
@@ -81,18 +79,23 @@ def build_app():
  # No user configuration/data or development paths are copied into the image.
  assert not list(app.rglob('.env'))
  assert not (resources/'data').exists()
+ assert not (resources/'models').exists()
+ assert not (resources/'service/_internal/torch').exists()
  entitlements=BUILD/'entitlements.plist'
  with entitlements.open('wb') as f:plistlib.dump({'com.apple.security.cs.allow-jit':True,'com.apple.security.cs.allow-unsigned-executable-memory':True,'com.apple.security.cs.disable-library-validation':True,'com.apple.security.device.audio-input':True,'com.apple.security.device.camera':True},f)
  run(['/usr/bin/codesign','--force','--deep','--sign','-','--entitlements',entitlements,app])
  run(['/usr/bin/codesign','--verify','--deep','--strict',app])
  link=staging/'Applications'
  if not link.exists():link.symlink_to('/Applications')
- (staging/'설치 안내.txt').write_text('Study Signal.app을 Applications 폴더로 옮겨 실행하세요.\nApple Silicon / macOS 15 이상용 개발 빌드입니다. Apple 공증은 포함하지 않습니다.\n상단 파형 시그널 아이콘 → 설정에서 OpenRouter API 키를 입력하세요.\n⌘⇧Space 창 표시/숨김 · ⌘, 설정 · ⌘⇧Enter 음성(설정에서 별도 켜기)\n시선 모델은 연구·비상업용 라이선스입니다.\n')
+ (staging/'설치 안내.txt').write_text('Study Signal.app을 Applications 폴더로 옮겨 실행하세요.\nApple Silicon / macOS 15 이상용 개발 빌드입니다. Apple 공증은 포함하지 않습니다.\n상단 파형 시그널 아이콘 → 설정에서 OpenRouter API 키를 입력하세요.\n⌘⇧Space 창 표시/숨김 · ⌘, 설정 · ⌘⇧Enter 음성(설정에서 별도 켜기)\n시선 감지는 선택 설치입니다. 설정에서 별도 시선 패키지 ZIP을 선택해 설치하세요.\n시선 모델은 연구·비상업용 라이선스입니다.\n')
  return app,version
 
 def main():
  parser=argparse.ArgumentParser();parser.add_argument('--reuse-service',action='store_true');parser.add_argument('--app-only',action='store_true');args=parser.parse_args()
  BUILD.mkdir(exist_ok=True)
+ if not (BUILD/'gaze-addon.json').exists():
+  from build_gaze_addon import build
+  build()
  if not args.reuse_service:service()
  icon();app,version=build_app()
  print('App built:',app,flush=True)

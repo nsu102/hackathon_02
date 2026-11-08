@@ -22,7 +22,7 @@ with sync_playwright() as p:
  window:async(action,data)=>{window.actions.push({action,data});
  if(action==='collapse'){window.collapsed=!window.collapsed;return window.collapsed;}
  if(action==='displays')return [{id:1,label:'모의 모니터',x:-1440,y:0,width:1440,height:900,scale:2}];
- if(action==='gaze-display')return {x:-1440,y:0,width:1440,height:900,display_id:1};
+ if(action==='gaze-addon-status')return {installed:true,busy:false};if(action==='gaze-display')return {x:-1440,y:0,width:1440,height:900,display_id:1};
  if(action==='overlay-bounds')return null;
  if(action==='calibration-open')return {x:-1440,y:0,width:440,height:820,display_id:1};
  if(action==='scratchpad-begin'){const id='pad-'+window.padEntries.length;window.padEntries.push({id,status:'pending'});return id;}if(action==='scratchpad-complete'){const entry=window.padEntries.find(e=>e.id===data.id);if(entry)Object.assign(entry,{status:'ready',message:data.message});}if(action==='scratchpad-fail'){const entry=window.padEntries.find(e=>e.id===data.id);if(entry)entry.status='error';}if(action==='materials-import'||action==='materials-example')return [{name:'notes.pdf',text:'고유 확인 코드 37. CENT는 CXL과 PIM을 결합한 LLM 추론 시스템입니다.',pages:1,truncated:false}];if(action==='voice-configure'){window.pendingTarget=data.target;return {enabled:data.enabled};}if(action==='connection-settings')return {key_configured:true,model:'anthropic/claude-sonnet-5.5'};

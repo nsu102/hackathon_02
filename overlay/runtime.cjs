@@ -1,6 +1,8 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 function paths({packaged,resourcesPath,appData,sourceRoot}){
- return packaged?{root:path.join(appData,'Study Signal'),service:path.join(resourcesPath,'service','study-service'),models:path.join(resourcesPath,'models','unigaze'),defaults:path.join(resourcesPath,'defaults.env')}:{root:sourceRoot,service:null,models:null,defaults:path.join(sourceRoot,'.env.example')};
+ if(!packaged)return {root:sourceRoot,service:null,gazeService:null,gazeRoot:null,gazeManifest:null,models:null,defaults:path.join(sourceRoot,'.env.example')};
+ const root=path.join(appData,'Study Signal'),gazeRoot=path.join(root,'components','gaze-v1');
+ return {root,service:path.join(resourcesPath,'service','study-service'),gazeRoot,gazeService:path.join(gazeRoot,'service','study-service'),gazeManifest:path.join(resourcesPath,'gaze-addon.json'),models:path.join(gazeRoot,'models'),defaults:path.join(resourcesPath,'defaults.env')};
 }
 function writeEnv(file,values){
  let text=fs.existsSync(file)?fs.readFileSync(file,'utf8'):'';

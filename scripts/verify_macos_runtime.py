@@ -8,7 +8,7 @@ import argparse,http.client,json,os,secrets,socket,subprocess,tempfile,time,base
 ROOT=Path(__file__).resolve().parents[1]
 
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('service',type=Path);parser.add_argument('weights',type=Path);parser.add_argument('--live',action='store_true');parser.add_argument('--tts',action='store_true');parser.add_argument('--report',default='macos-runtime.json');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('service',type=Path);parser.add_argument('weights',type=Path);parser.add_argument('--without-gaze',action='store_true');parser.add_argument('--live',action='store_true');parser.add_argument('--tts',action='store_true');parser.add_argument('--report',default='macos-runtime.json');args=parser.parse_args()
  import sys
  sys.path.insert(0,str(ROOT))
  from last_hour.config import load_env
@@ -20,15 +20,16 @@ def main():
   check=subprocess.run([str(service),'self-check'],cwd=cwd,env=env,capture_output=True,text=True,timeout=60)
   if check.returncode:raise RuntimeError(check.stderr[-3000:])
   report['self_check']=json.loads(check.stdout)
-  worker=subprocess.Popen([str(service),'neural','--model','unigaze_l16_joint'],cwd=cwd,env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
-  try:
-   import select
-   if not select.select([worker.stdout],[],[],90)[0]:raise RuntimeError('Model readiness timed out')
-   ready=json.loads(worker.stdout.readline())
-   if not ready.get('ready'):raise RuntimeError('Frozen model did not load: '+json.dumps(ready))
-   worker.stdin.close();worker.wait(timeout=10);report['neural_ready']=ready
-  finally:
-   if worker.poll() is None:worker.kill();worker.wait()
+  if not args.without_gaze:
+   worker=subprocess.Popen([str(service),'neural','--model','unigaze_l16_joint'],cwd=cwd,env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+   try:
+    import select
+    if not select.select([worker.stdout],[],[],90)[0]:raise RuntimeError('Model readiness timed out')
+    ready=json.loads(worker.stdout.readline())
+    if not ready.get('ready'):raise RuntimeError('Frozen model did not load: '+json.dumps(ready))
+    worker.stdin.close();worker.wait(timeout=10);report['neural_ready']=ready
+   finally:
+    if worker.poll() is None:worker.kill();worker.wait()
   extracted=subprocess.run([str(service),'extract-material',str(ROOT/'tests/fixtures/reference-notes.pdf')],cwd=cwd,env=env,capture_output=True,text=True,timeout=20)
   if extracted.returncode:raise RuntimeError('Frozen PDF extraction failed: '+extracted.stdout)
   material=json.loads(extracted.stdout);assert material['ok'] and '37' in material['text'];report['pdf_material']={'name':material['name'],'pages':material['pages'],'contains_reference_code':True}

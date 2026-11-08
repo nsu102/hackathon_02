@@ -26,6 +26,10 @@ try:
    time.sleep(.1)
   if not page:raise RuntimeError('Main renderer missing')
   page.wait_for_function("() => !document.getElementById('start').disabled",timeout=30000)
+  addon=page.evaluate("window.studyBridge.window('gaze-addon-status')")
+  if not addon['installed']:
+   page.evaluate("document.getElementById('focus-enabled').checked=true");page.locator('#start').click();page.locator('#learning').wait_for(state='visible')
+   assert page.evaluate("document.getElementById('camera').srcObject===null")
   page.evaluate("window.studyBridge.window('scratchpad-show')")
   pad=None
   for _ in range(50):
@@ -48,7 +52,7 @@ try:
   stored=json.loads((qa/'scratchpad/pad.json').read_text());assert len(stored['entries'])==2 and stored['entries'][-1]['status']=='ready'
   page.evaluate("window.studyBridge.window('scratchpad-show')")
   pad.reload();pad.locator('.summary').wait_for();assert pad.locator('.entry').count()==2
-  report={'environment':'native Electron; isolated local pad; authored text; no external request','packaged':args.executable.name!='Electron','native_window_opened':True,'shared_material_names':True,'no_duplicate_upload':True,'shared_opacity':True,'note_saved':True,'request_completed_in_place':True,'translation_summary_displayed':True,'reload_restored':True,'overlay_bounds':bounds,'physical_microphone_tested':False}
+  report={'environment':'native Electron; isolated local pad; authored text; no external request','packaged':args.executable.name!='Electron','gaze_optional':True,'gaze_installed':addon['installed'],'camera_not_started_without_gaze':not addon['installed'],'native_window_opened':True,'shared_material_names':True,'no_duplicate_upload':True,'shared_opacity':True,'note_saved':True,'request_completed_in_place':True,'translation_summary_displayed':True,'reload_restored':True,'overlay_bounds':bounds,'physical_microphone_tested':False}
   (root/'docs/qa/native-scratchpad.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');print(json.dumps(report,ensure_ascii=False))
 finally:
  if process.poll() is None:os.killpg(process.pid,signal.SIGTERM)

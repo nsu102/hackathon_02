@@ -1,0 +1,43 @@
+{
+  "service": "study-service",
+  "architecture": "arm64",
+  "external_python_on_path": false,
+  "self_check": {
+    "ok": true,
+    "frozen": true,
+    "python": "3.13.7",
+    "gaze_bundled": false,
+    "pypdf": "7.0.0"
+  },
+  "pdf_material": {
+    "name": "reference-notes.pdf",
+    "pages": 1,
+    "contains_reference_code": true
+  },
+  "health": {
+    "version": "0.4",
+    "study_model": {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-5.5",
+      "configured": true
+    }
+  },
+  "live_answer": {
+    "content": "빨강이라는 조건이 주어지면 가능한 경우가 빨간 카드 4장으로 줄어들기 때문에, 그 4장이 새로운 기준(분모)이 됩니다.",
+    "source": "openrouter",
+    "seconds": 2.31
+  },
+  "screen_and_pdf": {
+    "content": "첨부 자료(reference-notes.pdf)에는 고유 확인 코드가 37이라고 적혀 있습니다. 화면에는 '빨간 카드 4장 중 별 표시는 2장'이라고 나와 있고, 빨간 카드라는 조건이 새로운 전체가 된다고 설명합니다. 그래서 빨간 카드 중 별 카드일 확률은 2/4 = 1/2입니다. 참고로 화면의 식은 'P(별 | 빨강)'이 아니라 'P(별 | 빨강)' 대신 '빨강'이 '빨강'으로 보이는 부분이 'P(별 | 빨강)' 형태의 조건부 확률 식이며, 핵심은 분모를 전체 카드가 아니라 빨간 카드 4장으로 잡는 것입니다. 힌트: 조건이 주어지면 '무엇이 전체인가'를 먼저 확인하세요.",
+    "seconds": 4.7,
+    "reference_code_verified": true,
+    "screen_probability_verified": true
+  },
+  "voice_and_screen": {
+    "transcript": "이거 어렵네. 알려줘. 조건부 확률에서 분모는 왜 이렇게 되나요?",
+    "content": "화면 기준으로 설명할게요. 조건부 확률 P(별 | 빨강)은 '빨간 카드라는 걸 이미 안 상태에서 별일 확률'이에요. 그래서 전체 카드 수가 아니라, 조건에 맞는 빨간 카드 4장만 새로운 전체(분모)가 됩니다. 그중 별 표시가 있는 카드는 2장이므로 분자는 2, 따라서 2/4 = 1/2입니다. 화면에는 'P(별 | 빨강)'에서 '빨강'이 '빨갓'처럼 보이는 표기가 있는데, 문맥상 '빨강'으로 이해했어요. 첨부 자료에는 확률 설명이 없고 참고 코드 언급만 있어서, 설명은 현재 화면 내용만 사용했어요.\n\n힌트: 분모는 '조건에 해당하는 경우의 수'라고 생각해 보세요.",
+    "seconds": 5.31
+  },
+  "media_persisted": false,
+  "private_data_embedded": false
+}

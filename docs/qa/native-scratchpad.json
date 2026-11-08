@@ -1,6 +1,9 @@
 {
   "environment": "native Electron; isolated local pad; authored text; no external request",
   "packaged": true,
+  "gaze_optional": true,
+  "gaze_installed": false,
+  "camera_not_started_without_gaze": true,
   "native_window_opened": true,
   "shared_material_names": true,
   "no_duplicate_upload": true,

@@ -10,7 +10,8 @@ app.setName('Study Signal');
 const runtime=runtimeTools.paths({packaged:app.isPackaged,resourcesPath:process.resourcesPath,appData:app.getPath('appData'),sourceRoot:path.resolve(__dirname,'..')});
 const root=runtime.root,runFile=promisify(execFile);
 runtimeTools.initialize(runtime);
-const neuralWorker=new NeuralWorker(root,{executable:runtime.service,weightsDir:runtime.models});
+const neuralWorker=new NeuralWorker(root,{executable:runtime.gazeService,weightsDir:runtime.models});
+const gazeInstaller=require('./gaze-installer.cjs').createGazeInstaller({root:runtime.gazeRoot,core:runtime.service,manifest:runtime.gazeManifest,development:app.isPackaged?null:{python:path.join(root,'.gaze-venv/bin/python'),weights:path.join(root,'data/models/unigaze/unigaze_l16_joint.safetensors')},onState:state=>win?.webContents.send('gaze-install:state',state)});
 let connectionSettings={key_configured:false,model:'anthropic/claude-sonnet-5.5'};
 let qaUnderlay=null;
 let win, child, endpoint, token, activeId, readiness, collapsed = false, bounds, quitting = false, cameraIntent = 0, calibrationBounds = null, gazeDisplay = null, pointerWin = null, voice = null, micIntent = 0,studyTray=null,bubbles=null,checklist=null,scratchpad=null,captureSuppressed=false;
@@ -115,7 +116,15 @@ ipcMain.handle('window:action', async (e, action, data) => {
     studyTray?.update({running:data.running,paused:data.paused,camera:data.camera,focus_enabled:data.focus_enabled,muted:data.muted,focus:data.focus});return;
   }
   if (action === 'gaze-sample') {if(data&&Number.isFinite(data.at_ms)){voice.sample(data);}return;}
-  if (action === 'neural-start') return neuralWorker.start();
+  if (action === 'gaze-addon-status') return gazeInstaller.status();
+  if (action === 'gaze-addon-cancel') {gazeInstaller.cancel();return;}
+  if (action === 'gaze-addon-install') {
+    if(gazeInstaller.status().busy)throw new Error('시선 패키지를 설치하고 있어요.');
+    const result=await dialog.showOpenDialog(win,{title:'시선 추가 패키지 설치',buttonLabel:'설치',properties:['openFile'],filters:[{name:'Study Signal 시선 패키지',extensions:['zip']}]});
+    if(result.canceled||!result.filePaths.length)return gazeInstaller.status();
+    neuralWorker.stop();return gazeInstaller.install(result.filePaths[0]);
+  }
+  if (action === 'neural-start') {if(!gazeInstaller.installed())throw new Error('설정에서 시선 감지 추가 패키지를 먼저 설치해주세요.');return neuralWorker.start();}
   if (action === 'neural-predict') return neuralWorker.predict(data);
   if (action === 'neural-stop') {neuralWorker.stop();return;}
   if (action === 'close') { win.close(); return; }
@@ -206,6 +215,6 @@ else app.whenReady().then(async () => {
   globalShortcut.register('CommandOrControl+Shift+Space', () => {if(win?.isVisible()||bubbles.windows().some(w=>w.isVisible())){win.hide();bubbles.hide();}else show();});
 });
 app.on('before-quit', e => {
-  if (quitting) return; quitting = true; e.preventDefault(); voice?.disable(); neuralWorker.stop(); globalShortcut.unregisterAll(); pointerWin?.close();studyTray?.destroy();bubbles?.destroy();checklist?.destroy();scratchpad?.destroy();qaUnderlay?.destroy();
+  if (quitting) return; quitting = true; e.preventDefault(); gazeInstaller.cancel();voice?.disable(); neuralWorker.stop(); globalShortcut.unregisterAll(); pointerWin?.close();studyTray?.destroy();bubbles?.destroy();checklist?.destroy();scratchpad?.destroy();qaUnderlay?.destroy();
   Promise.race([activeId ? api('POST', `/study/sessions/${activeId}/end`, {}) : Promise.resolve(), new Promise(r => setTimeout(r, 500))]).catch(() => {}).finally(() => { child?.kill('SIGINT'); app.exit(0); });
 });

@@ -26,7 +26,7 @@
 Watch 수집 서버는 별도 경로다. 기본 앱은 OpenRouter를 사용하며, 개인 비전 학습 경로는 중단했으며 현재 추론에 사용하지 않는다. API 키·로컬 인증 토큰은 main/서버에만 두고 renderer에 노출하지 않는다.
 
 
-v0.8 설치판: `runtime.cjs`가 앱 리소스(서비스·모델)와 쓰기 가능한 Application Support(개인 .env·기록·Chromium 저장소)를 분리한다. `scripts/bundled_service.py`는 PyInstaller 독립 바이너리 진입점이다. OpenRouter용 공개 CA 인증서와 Torchvision stable 연산 파일을 포함한다. `connection-ui.mjs`는 공개 연결 상태만 읽고, 입력한 키는 저장 IPC 후 비우며 localStorage에 저장하지 않는다. DMG 빌드는 개인 .env·기록을 복사하지 않는다.
+v0.11 설치판: `runtime.cjs`가 앱 리소스(가벼운 서비스·추가 패키지 검증 정보)와 쓰기 가능한 Application Support(개인 .env·기록·Chromium 저장소)를 분리한다. `scripts/bundled_service.py`는 PyInstaller 독립 바이너리 진입점이다. OpenRouter용 공개 CA 인증서와 Torchvision stable 연산 파일을 포함한다. `connection-ui.mjs`는 공개 연결 상태만 읽고, 입력한 키는 저장 IPC 후 비우며 localStorage에 저장하지 않는다. DMG 빌드는 개인 .env·기록을 복사하지 않는다.
 
 `bubbles.cjs`는 focusable=false 투명 창을 선택 모니터 workArea 우하단에 둔다. `bubble-preload.cjs`는 고정 동작과 높이 변경만 전달한다. 캡처 중 suppress와 자체 창 숨김으로 버블이 이미지에 들어가지 않게 한다. 큰 창은 설정·기록·자료 관리용이다.
 
@@ -43,3 +43,11 @@ v0.8 설치판: `runtime.cjs`가 앱 리소스(서비스·모델)와 쓰기 가�
 `document_help.py`는 전사된 번역/요약 의도를 분리하고 현재 캡처의 읽을 수 있는 범위로 프롬프트를 제한한다. 번역·요약 출력의 문자열 계약을 검사해 artifact를 반환한다. 요청 시작의 pending 블록을 완료/실패 상태로 바꾸며 취소된 응답은 화면에 적용하지 않는다. 패드에는 파일 업로드 경로가 없다. 기존 학습 세션의 material을 음성 모델 프롬프트에 사용하고, 제한된 scratchpad-context IPC는 자료 이름·목표·자료 존재 여부만 패드에 표시한다.
 
 index.html과 scratchpad.html은 study-theme.css를 공유한다. study-opacity 저장소 변경 이벤트로 패드 불투명도도 갱신한다.
+
+## 시선 구성 요소 분리
+
+기본 DMG는 bundled_core.py → core-service-dist를 사용하며 torch/timm/cv2/numpy를 포함하지 않는다. 기존 시선 워커는 별도 ZIP에만 포함한다. runtime.cjs의 service는 앱 안의 작은 API/PDF 실행 파일이며 gazeService/models는 개인 components/gaze-v1 설치 위치다.
+
+앱의 gaze-installer.cjs는 네이티브 선택 파일을 고정 manifest의 크기·SHA-256으로 확인하도록 core의 install-gaze를 실행한다. gaze_install.py는 경로·링크·파일 수·압축 해제 크기를 검사하고 같은 파일시스템의 임시 폴더에서 실행 환경을 검증한 뒤 원자적으로 교체한다. 실패/취소는 임시 폴더를 제거하며 기존 학습 데이터와 설정을 건드리지 않는다.
+
+설치 상태 확인은 작은 marker/파일 존재 확인이며 대용량 모델을 읽지 않는다. 미설치 상태에서는 startStudy가 카메라 준비를 건너뛴다. 설치 완료 자체로 카메라/모델을 실행하지 않는다.

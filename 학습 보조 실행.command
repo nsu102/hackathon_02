@@ -15,9 +15,11 @@ PY
   echo '.env를 만들었어요. OPENROUTER_API_KEY를 채우면 실제 AI 도움을 사용할 수 있어요.'
 fi
 chmod 600 .env
-if [[ ! -x .gaze-venv/bin/python || ! -f data/models/unigaze/unigaze_l16_joint.safetensors ]]; then
-  ./신경망\ 시선\ 설치.command
+if [[ ! -x .venv/bin/python ]]; then python3 -m venv .venv; fi
+if ! .venv/bin/python -c 'import pypdf, last_hour' >/dev/null 2>&1; then
+  .venv/bin/python -m pip install -e .
 fi
+
 cd overlay
 if [[ ! -d node_modules/electron || ! -d node_modules/uiohook-napi ]]; then npm ci; fi
 npm start

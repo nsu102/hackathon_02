@@ -1,13 +1,15 @@
+import {setupGazeAddon} from './gaze-addon-ui.mjs';
 import {GazeTracker} from './gaze.mjs';
 import {selectRegion} from './regions.mjs';
 import {CalibrationStore,calibrationContext} from './calibration-store.mjs';
 const $=id=>document.getElementById(id),bridge=window.studyBridge;
 export function setupGaze(aggregate,error){
- let calibrationDisplay=null,calibrationActive=false,savedCalibration=null;
+ let addon=null,calibrationDisplay=null,calibrationActive=false,savedCalibration=null;
  const store=new CalibrationStore(localStorage);
  const tracker=new GazeTracker($('camera'),v=>{
   $('gaze-label').textContent=v.label;$('camera-dot').classList.toggle('on',tracker.running);
   $('camera-preview').hidden=v.status==='off';$('gaze-map-section').hidden=!tracker.running;
+  if(v.status==='off'&&addon&&!addon.available()){$('gaze-label').textContent='시선 기능 미설치';$('camera-toggle').textContent=addon.busy()?'설치 중…':'시선 설치';}
   $('camera-instruction').textContent=v.label;$('camera-toggle').textContent=tracker.running||v.status==='loading'?'감지 끄기':'감지 켜기';
   if(v.status==='calibrating'){
    $('calibration-target').hidden=false;$('calibration-target').style.left=v.target.x*100+'%';$('calibration-target').style.top=v.target.y*100+'%';
@@ -28,6 +30,8 @@ export function setupGaze(aggregate,error){
   if(p){if(inScreen){$('map-dot').style.left=p.nx*100+'%';$('map-dot').style.top=p.ny*100+'%';}$('gaze-coordinates').textContent=`x ${Math.round(p.x)} · y ${Math.round(p.y)} DIP${inScreen?'':' · 화면 밖'}`;$('gaze-accuracy').textContent=`검증 중앙 오차 ${Math.round(p.error_px)} DIP px`;}else $('gaze-coordinates').textContent='측정 불가 또는 미검증';
   bridge.window('gaze-point',p?{x:p.x,y:p.y,error_px:p.error_px}:null).catch(()=>{});
  });
+ addon=setupGazeAddon({bridge,error,onChange:state=>{if(!tracker.running&&!tracker.loading){$('camera-toggle').textContent=state.installed?'감지 켜기':state.busy?'설치 중…':'시선 설치';$('camera-toggle').disabled=state.busy;$('gaze-label').textContent=state.installed?'카메라 꺼짐':state.busy?'시선 기능 설치 중':'시선 기능 미설치';}}});
+ tracker.optionalReady=async()=>{await addon.ready;return addon.available();};tracker.gazeAvailable=()=>addon.available();
  tracker.regions={study:null,notes:null};
  function regionStatus(){$('region-status').textContent=(tracker.regions.study?'학습 영역 설정됨':'학습 영역 미지정')+' · '+(tracker.regions.notes?'필기 영역 허용':'필기 영역 미지정');}
  async function displays(){const list=await bridge.window('displays'),previous=$('monitor').value||localStorage.getItem('study-monitor');$('monitor').replaceChildren(...list.map(d=>{const o=document.createElement('option');o.value=d.id;o.textContent=`${d.label} · ${d.width}×${d.height} · ${d.scale}x`;return o;}));if(list.some(d=>String(d.id)===previous))$('monitor').value=previous;}
@@ -56,8 +60,8 @@ export function setupGaze(aggregate,error){
  async function closeCalibration(cancel=false){if(cancel)tracker.cancelCalibration();calibrationActive=false;$('calibration').hidden=true;await bridge.window('calibration-close');}
  tracker.closeCalibration=()=>closeCalibration(true);
  function startCalibration(reuse=true){$('calibration-intro').hidden=true;$('calibration-done').hidden=true;$('calibration-retry').hidden=true;if(reuse&&savedCalibration)tracker.beginSavedValidation(calibrationDisplay,savedCalibration);else tracker.beginCalibration(calibrationDisplay);}
- tracker.startMonitoring=async()=>{if(tracker.running||tracker.loading)return;tracker.setDisplay(await bridge.window('gaze-display',selected()));await tracker.start();};
- $('camera-toggle').onclick=async()=>{error();if(tracker.running||tracker.loading){tracker.stop();$('show-gaze').checked=false;await bridge.window('gaze-visible',false);return;}try{await tracker.startMonitoring();}catch(e){error(e.message);}};
+ tracker.startMonitoring=async()=>{await addon.ready;if(!addon.available())throw new Error('설정에서 시선 감지 추가 패키지를 설치해주세요. 음성 질문은 바로 사용할 수 있어요.');if(tracker.running||tracker.loading)return;tracker.setDisplay(await bridge.window('gaze-display',selected()));await tracker.start();};
+ $('camera-toggle').onclick=async()=>{error();await addon.ready;if(!addon.available()){await bridge.window('show-main',{section:'settings'});await addon.install();return;}if(tracker.running||tracker.loading){tracker.stop();$('show-gaze').checked=false;await bridge.window('gaze-visible',false);return;}try{await tracker.startMonitoring();}catch(e){error(e.message);}};
  $('recalibrate').onclick=()=>openCalibration().catch(e=>error(e.message));$('calibration-start').onclick=()=>startCalibration();$('calibration-retry').onclick=()=>startCalibration(false);$('calibration-full').onclick=()=>startCalibration(false);
  $('calibration-clear').onclick=()=>{try{store.clear();savedCalibration=null;$('calibration-storage').textContent='저장된 보정을 지웠어요. 다음 실행에는 새로 보정해요.';}catch(e){error(e.message);}};
  $('calibration-done').onclick=()=>closeCalibration().catch(e=>error(e.message));$('calibration-cancel').onclick=()=>closeCalibration(true).catch(e=>error(e.message));

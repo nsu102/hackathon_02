@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import runtime from '../runtime.cjs';
 test('installed app separates immutable bundled assets from writable personal configuration',()=>{
  const p=runtime.paths({packaged:true,resourcesPath:'/Applications/Study Signal.app/Contents/Resources',appData:'/user/Library/Application Support',sourceRoot:'/source'});
- assert.equal(p.root,'/user/Library/Application Support/Study Signal');assert.ok(p.service.startsWith('/Applications/'));assert.ok(!p.models.startsWith(p.root));
+ assert.equal(p.root,'/user/Library/Application Support/Study Signal');assert.ok(p.service.startsWith('/Applications/'));assert.ok(p.models.startsWith(p.root));assert.ok(p.gazeService.startsWith(p.gazeRoot));assert.notEqual(p.gazeService,p.service);
  const dev=runtime.paths({packaged:false,sourceRoot:'/source'});assert.equal(dev.root,'/source');assert.equal(dev.service,null);
 });
 test('first launch creates a private token; existing credentials and unrelated settings survive updates',()=>{

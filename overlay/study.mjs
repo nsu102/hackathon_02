@@ -99,7 +99,7 @@ async function startStudy(){
  if(session&&session.status!=='ended')return;
  error();render(await bridge.request('POST','/study/sessions',{goal:$('goal').value.trim()||'화면과 첨부 자료 이해하기',material:materials.text(),minutes:Number($('minutes').value),ai_enabled:$('ai').checked}));
  if(materials.text().trim())planner.materialChanged();
- if($('focus-enabled').checked)tracker.startMonitoring().catch(e=>error(e.message));
+ if($('focus-enabled').checked&&await tracker.optionalReady())tracker.startMonitoring().catch(e=>error(e.message));
 }
 $('start').onclick=()=>startStudy().catch(e=>error(e.message));
 async function checkin(state){manualCheckin=false;render(await bridge.request('POST',`/study/sessions/${session.id}/checkins`,{state}));}
@@ -110,6 +110,6 @@ $('end').onclick=async()=>{try{voice.stop();tracker.stop();focus.reset();$('show
 $('new-session').onclick=()=>{voice.stop();focus.reset();session=null;anchor=null;manualCheckin=false;lastMessageIds.clear();$('chat').replaceChildren();$('setup').hidden=false;$('summary').hidden=true;$('minutes').disabled=false;$('goal-display').textContent='작은 목표부터 시작해요';$('timer-label').textContent='오늘의 학습';clock();};
 $('settings-toggle').onclick=()=>{$('settings').hidden=!$('settings').hidden;};$('close').onclick=()=>bridge.window('close');$('collapse').onclick=async()=>document.body.classList.toggle('collapsed',await bridge.window('collapse'));
 bridge.onLost(()=>{voice.stop();ready=false;$('start').disabled=true;tracker.stop();error('학습 서버 연결이 끊겼어요. 앱을 다시 실행해주세요.');});
-(async()=>{try{const v=await bridge.ready();if(!v?.ok)throw new Error(v?.message||'연결 실패');ready=true;syncPad();planner.restore();$('start').disabled=false;$('connection').textContent='v0.10 · 로컬 처리 · '+(v.health.study_model.configured?'모델 설정됨':'데모 사용 가능');bubbleConfigured=Boolean(v.health.study_model.configured);bridge.window('scratchpad-show').catch(()=>{});if(!bubbleConfigured)$('ai').checked=false;else voice.initializeShortcut();}catch(e){error(e.message);}})();
+(async()=>{try{const v=await bridge.ready();if(!v?.ok)throw new Error(v?.message||'연결 실패');ready=true;syncPad();planner.restore();$('start').disabled=false;$('connection').textContent='v0.11 · 로컬 처리 · '+(v.health.study_model.configured?'모델 설정됨':'데모 사용 가능');bubbleConfigured=Boolean(v.health.study_model.configured);bridge.window('scratchpad-show').catch(()=>{});if(!bubbleConfigured)$('ai').checked=false;else voice.initializeShortcut();}catch(e){error(e.message);}})();
 setInterval(async()=>{clock();if(!ready)return;try{if(session&&session.status!=='ended')render(await bridge.request('GET',`/study/sessions/${session.id}`));else heart(await bridge.request('GET','/study/heart'));}catch{}},2000);
 window.addEventListener('beforeunload',()=>{voice.stop();tracker.stop();});

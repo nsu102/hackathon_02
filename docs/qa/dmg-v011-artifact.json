@@ -1,0 +1,24 @@
+{
+  "file": "Study-Signal-0.11.0-arm64.dmg",
+  "bytes": 168225599,
+  "previous_dmg_bytes": 1612321082,
+  "reduction_percent": 89.6,
+  "sha256": "a0f50382f388787bd98d43660c8859269d9504e9046a4944c2499602a2870144",
+  "hdiutil_checksum": "VALID",
+  "codesign": "ad-hoc; deep strict verified",
+  "notarized": false,
+  "architecture": "arm64",
+  "minimum_macos": "15.0",
+  "unigaze_weights_bundled": false,
+  "pytorch_opencv_bundled": false,
+  "frontend_snapshot": "tested packaged version; concurrent calibration UI edits excluded",
+  "addon": {
+    "id": "study-signal-gaze-arm64-v1",
+    "version": "1.0.0",
+    "model": "unigaze_l16_joint",
+    "architecture": "arm64",
+    "filename": "Study-Signal-Gaze-arm64-v1.zip",
+    "bytes": 1414239322,
+    "sha256": "8802ce1ba7cf741c75bf70f738f28ccd29c68ee90048e2870f988a8f957af2be"
+  }
+}

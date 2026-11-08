@@ -1,0 +1,24 @@
+{
+  "installation": "pinned package extracted and runtime self-check passed",
+  "status": {
+    "installed": true,
+    "busy": false,
+    "phase": "installed",
+    "percent": 100,
+    "message": "",
+    "package": {
+      "name": "Study-Signal-Gaze-arm64-v1.zip",
+      "bytes": 1414239322
+    },
+    "development": false
+  },
+  "neural_ready": {
+    "ready": true,
+    "model": "unigaze_l16_joint",
+    "device": "mps",
+    "precision": "float16",
+    "source": "https://github.com/ut-vision/UniGaze",
+    "screen_calibration_required": true
+  },
+  "camera_frames_used": false
+}
