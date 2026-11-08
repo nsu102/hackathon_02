@@ -1,6 +1,0 @@
-{
-  "title": "PIM Is All You Need: A CXL-Enabled GPU-Free System for Large Language Model Inference",
-  "goal": "CENT의 PIM·PNM·CXL 구조와 추론 성능 결과를 설명하기",
-  "source": "https://doi.org/10.1145/3676641.3716267",
-  "notes": "1 Introduction\nCENT는 LLM 추론을 위한 CXL 기반 GPU-free 시스템이다.\n2 Motivation\n토큰을 순서대로 생성하는 decoding은 낮은 연산 집약도와 높은 메모리 대역폭 요구를 갖는다.\n3 Background\nprefill의 GEMM과 decoding의 GEMV를 비교해 읽는다.\n4 CENT Architecture\nPIM은 DRAM 뱅크 가까이에서 MAC 연산을 하고 PNM은 Softmax 같은 다른 연산을 맡는다. CXL은 여러 장치의 메모리 용량과 통신을 연결한다.\n5 Parallel Mapping\nPipeline Parallel과 Tensor Parallel의 처리량·지연 시간 목표를 구분한다.\n6 Evaluation Methodology\n논문의 비교 모델, 배치 크기, 컨텍스트 길이와 기준 하드웨어를 먼저 확인한다.\n7 Results\n처리량 Tokens/s, 에너지 효율 Tokens/J, 비용 효율 Tokens/$를 구분하며 그래프의 축과 실험 조건을 함께 읽는다.\n8 Related Work\nCXL-PNM 및 GPU-PIM 시스템과 CENT의 차이를 비교한다.\n9 Conclusion\n주장과 결과, 적용 조건 및 한계를 내 말로 정리한다.\n\n이 텍스트는 논문 학습을 위한 요약 노트이며 원문 전체가 아니다. 실제 PDF를 추가하면 해당 자료를 우선 사용한다."
-}

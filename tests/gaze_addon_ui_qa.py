@@ -20,7 +20,7 @@ with sync_playwright() as p:
  if(name==='gaze-addon-cancel'){window.gazeState={installed:false,busy:false};window.installEvent(window.gazeState);window.installFail(new Error('시선 설치를 취소했어요.'));}
  if(name==='displays')return [{id:1,label:'모의 모니터',width:1440,height:900,scale:2}];if(name==='connection-settings')return {key_configured:false,model:'anthropic/test'};return null;}};
  ''')
- page.goto(f'http://127.0.0.1:{server.server_port}/overlay/index.html');page.locator('#settings-toggle').click()
+ page.goto(f'http://127.0.0.1:{server.server_port}/overlay/index.html');page.locator('#settings-toggle').click();page.locator('#focus-settings>summary').click()
  page.wait_for_function("() => document.getElementById('gaze-addon-status').textContent.includes('미설치')")
  assert page.locator('#camera-toggle').inner_text()=='시선 설치'
  page.locator('#gaze-addon-install').click();page.wait_for_function("() => document.getElementById('gaze-addon-install').disabled")
@@ -32,7 +32,7 @@ with sync_playwright() as p:
  assert page.locator('#gaze-addon-install').is_hidden();assert page.locator('#camera-toggle').inner_text()=='감지 켜기'
  assert page.evaluate("!window.actions.includes('camera-permission')&&!window.actions.includes('neural-start')")
  page.evaluate('''async()=>{const {GazeTracker}=await import('/overlay/gaze.mjs');GazeTracker.prototype.start=async function(){this.running=true;window.gazeStarted=true;this.update({status:'tracking',label:'모의 시선 감지'});};}''')
- page.locator('#settings-toggle').click();page.locator('#start').click();page.wait_for_function('() => window.gazeStarted===true')
+ page.locator('#settings-back').click();page.locator('#start').click();page.wait_for_function('() => window.gazeStarted===true')
  assert not errors,errors
  report={'passed':['missing-component label','single install action','progress percentage','install and camera controls locked while busy','cancel and retry','installed state','no automatic camera or model start','new study can enable gaze after installing during this app run'],'page_errors':errors,'environment':'headless Chrome; owned installer fixture'}
  (root/'docs/qa/gaze-addon-ui.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');print('Optional gaze UI: 8 scenarios passed')

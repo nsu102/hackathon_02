@@ -70,15 +70,6 @@ ipcMain.handle('window:action', async (e, action, data) => {
   if (action === 'checklist-update') {checklist?.update(data);return;}
   if (action === 'bubble-update') {bubbles?.update(data);return;}
   if (action === 'bubble-clear-nag') {bubbles?.clearNag();return;}
-  if (action === 'materials-example') {
-    const file=path.join(root,'data/examples/pimisalluneed.pdf');
-    if(fs.existsSync(file)){
-      const python=runtime.service||path.join(root,'.gaze-venv/bin/python');const args=runtime.service?['extract-material',file]:['-m','last_hour.materials',file];
-      const {stdout}=await runFile(python,args,{cwd:root,timeout:20000,maxBuffer:200000});const value=JSON.parse(stdout);if(!value.ok)throw new Error(value.error);return [value];
-    }
-    const example=JSON.parse(fs.readFileSync(path.join(__dirname,'assets/pim-example.json'),'utf8'));
-    return [{name:'PIM Is All You Need · 개념 노트',text:example.title+'\n'+example.notes+'\n출처: '+example.source,pages:null,truncated:false}];
-  }
   if (action === 'materials-import') {
     const chosen=await dialog.showOpenDialog({title:'학습 자료 선택',properties:['openFile','multiSelections'],filters:[{name:'학습 자료',extensions:['pdf','txt','md','docx']}]});
     if(chosen.canceled)return [];if(chosen.filePaths.length>5)throw new Error('자료는 한 번에 5개까지 선택해주세요.');
@@ -130,13 +121,13 @@ ipcMain.handle('window:action', async (e, action, data) => {
   if (action === 'close') { win.close(); return; }
   if (action === 'camera-permission') { cameraIntent = Date.now() + 15000; return { granted: process.platform !== 'darwin' || await systemPreferences.askForMediaAccess('camera') }; }
   if (action === 'gaze-display') { gazeDisplay = screen.getAllDisplays().find(d=>String(d.id)===String(data?.display_id))||screen.getDisplayMatching(win.getBounds()); checklist?.position();bubbles?.position();scratchpad?.position();return { ...gazeDisplay.bounds, display_id: gazeDisplay.id, scale_factor:gazeDisplay.scaleFactor,rotation:gazeDisplay.rotation }; }
-  if (action === 'calibration-open') {
+  if (action === 'selection-open') {
     if (collapsed || calibrationBounds) throw new Error('창을 펼친 후 다시 시도해주세요.');
     calibrationBounds = win.getBounds(); gazeDisplay = screen.getAllDisplays().find(d=>String(d.id)===String(data?.display_id))||gazeDisplay||screen.getDisplayMatching(calibrationBounds);
     pointerWin?.hide(); win.setResizable(false); win.setBounds(gazeDisplay.workArea); win.focus();
     return { ...gazeDisplay.bounds, display_id: gazeDisplay.id, scale_factor:gazeDisplay.scaleFactor,rotation:gazeDisplay.rotation, viewport: win.getContentBounds() };
   }
-  if (action === 'calibration-close') {
+  if (action === 'selection-close') {
     if (calibrationBounds) { win.setBounds(calibrationBounds); calibrationBounds = null; win.setResizable(true); }
     return;
   }
@@ -162,7 +153,7 @@ ipcMain.handle('window:action', async (e, action, data) => {
     pointerWin.webContents.send('gaze:point', valid ? { x: data.x-b.x, y: data.y-b.y, radius: Math.min(100, Math.max(16, data.error_px === null ? 40 : data.error_px)) } : null); return;
   }
   if (action === 'collapse') {
-    if (calibrationBounds) throw new Error('보정을 먼저 마쳐주세요.');
+    if (calibrationBounds) throw new Error('화면 선택을 먼저 마쳐주세요.');
     collapsed = !collapsed;
     if (collapsed) { bounds = win.getBounds(); win.setMinimumSize(320, 64); win.setBounds({ ...bounds, width: 320, height: 64, x: bounds.x + bounds.width - 320 }); win.setResizable(false); }
     else { win.setResizable(true); win.setBounds(bounds); win.setMinimumSize(380, 620); } return collapsed;

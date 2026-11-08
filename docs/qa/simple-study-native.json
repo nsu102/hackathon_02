@@ -1,0 +1,9 @@
+{
+  "packaged": true,
+  "environment": "real Electron and backend; isolated data; camera and AI off; no external requests",
+  "start_enabled": true,
+  "start_clicked_and_running": true,
+  "second_start_works": true,
+  "page_errors": [],
+  "passed": true
+}

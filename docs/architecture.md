@@ -4,8 +4,7 @@
 카메라 → MediaPipe 얼굴 정렬 → 같은 Mac의 UniGaze-L/MPS 워커
   ├─ ScreenPresence: 시선·머리 방향 + 짧은 현재 기준 → 화면 응시/이탈/unknown
   │    → FocusController: 8/20/2/90초 → 시각 알림/OS 음성/집계 이벤트
-  └─ 선택 ScreenGazeModel: 9점 개인 회귀 + 5점 검증 → 실험 좌표
-       → 검증된 계수만 로컬 저장, 재실행 시 5점 검증
+  └─ 정밀 보정/좌표 실험 코드는 사용자 앱에서 호출하지 않음
 
 전역 음성 단축키 → native 고정 캡처(자체 창 숨김)
   → WebM/Opus → 명시적 보내기 → 전체 선택 모니터 또는 수동 크롭

@@ -32,7 +32,7 @@ try:
   assert permissions['microphone']=='granted' and permissions['screen']=='granted',permissions
   page.evaluate('''encoded=>{const bytes=Uint8Array.from(atob(encoded),c=>c.charCodeAt(0));Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:async constraints=>{if(constraints.video)throw new Error('No camera in QA');const context=new AudioContext();const destination=context.createMediaStreamDestination();const source=context.createBufferSource();source.buffer=await context.decodeAudioData(bytes.buffer.slice(0));source.loop=true;source.connect(destination);await context.resume();source.start();const track=destination.stream.getAudioTracks()[0],stop=track.stop.bind(track);track.stop=()=>{stop();source.stop();context.close();};return destination.stream;}});}''',base64.b64encode((root/'tests/fixtures/voice-question.wav').read_bytes()).decode())
   page.evaluate("window.studyBridge.window('show-main',{section:'settings'})")
-  page.locator('#focus-enabled').uncheck();page.locator('#goal').fill('PIM Is All You Need · CENT 구조 이해');page.locator('#material').fill('1 Introduction\nCENT는 CXL로 메모리 장치를 연결하는 LLM 추론 시스템이다.\n2 Motivation\ndecoding은 순차적 토큰 생성으로 메모리 대역폭이 중요하다.\n3 Architecture\nPIM과 PNM이 연산을 나누어 처리한다.');page.locator('#material').dispatch_event('change');page.locator('#start').click();page.locator('#learning').wait_for(state='visible')
+  page.locator('#focus-settings>summary').click();page.locator('#focus-enabled').uncheck();page.locator('#settings-back').click();page.locator('#material-text-settings>summary').click();page.locator('#goal').fill('PIM Is All You Need · CENT 구조 이해');page.locator('#material').fill('1 Introduction\nCENT는 CXL로 메모리 장치를 연결하는 LLM 추론 시스템이다.\n2 Motivation\ndecoding은 순차적 토큰 생성으로 메모리 대역폭이 중요하다.\n3 Architecture\nPIM과 PNM이 연산을 나누어 처리한다.');page.locator('#material').dispatch_event('change');page.locator('#start').click();page.locator('#learning').wait_for(state='visible')
   assert permissions.get('accessibility'), '손쉬운 사용 권한이 없어 실제 전역 키 검증을 진행하지 않았습니다.'
   page.evaluate("window.studyBridge.window('show-main',{section:'voice-settings'})")
   page.locator('#voice-consent').check();page.locator('#read-answer').check();page.locator('#voice-shortcut').fill('CommandOrControl+Shift+F12');page.locator('#voice-enable').click();page.wait_for_function("() => document.getElementById('voice-enable').textContent.includes('끄기')")
@@ -44,9 +44,9 @@ try:
   report['tts_playback_started']=True
   page.wait_for_function("() => document.getElementById('tts-stop').hidden",timeout=90000)
   report['tts_playback_ended']=True
-  page.evaluate("window.studyBridge.window('show-main',{section:'settings'})");page.locator('#settings').wait_for(state='visible');page.locator('#permission-check').click();report['permission_ui']=page.locator('#permission-status').inner_text()
-  page.locator('#checklist-editor input[type=checkbox]').first.check();page.wait_for_function("() => document.getElementById('checklist-status').textContent.startsWith('1/')")
-  report['checklist_saved']=True;page.locator('#end').click()
+  page.evaluate("window.studyBridge.window('show-main',{section:'settings'})");page.locator('#settings').wait_for(state='visible');page.locator('#voice-settings>summary').click();page.locator('#permission-settings>summary').click();page.locator('#permission-check').click();report['permission_ui']=page.locator('#permission-status').inner_text()
+  page.locator('#plan-settings>summary').click();page.locator('#checklist-editor input[type=checkbox]').first.check();page.wait_for_function("() => document.getElementById('checklist-status').textContent.startsWith('1/')")
+  report['checklist_saved']=True;page.locator('#settings-back').click();page.locator('#end').click()
  (root/'docs/qa/native-app-checklist-voice.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');print(json.dumps(report,ensure_ascii=False))
 except Exception as exc:
  report['error']=str(exc);(root/'docs/qa/native-app-checklist-voice.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');raise

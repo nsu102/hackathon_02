@@ -12,7 +12,7 @@ SVG 원본: `overlay/assets/StudySignalTemplate.svg`. macOS 표시에는 투명 
 
 시선 추가 패키지가 설치된 경우에만 학습 시작 시 카메라를 준비한다. 미설치 상태에서는 음성 도움을 그대로 사용한다. 화면 가운데를 약 2초 바라보면 기본 화면 방향 기준을 잡는다. 설정의 감도는 여유롭게/보통/민감하게다. 자리나 거리가 바뀌면 **화면 기준 다시 잡기**를 누른다. ‘측정 불가’일 때는 이유가 표시되며 알림을 보내지 않는다. 실제 인지적 집중을 판정하는 기능으로 보지 않는다.
 
-정밀 위치 보정은 실험 설정이며 기본 감지와 음성 질문에 필수적이지 않다. 통과한 정밀 보정은 이 Mac에 저장되고 같은 환경이면 5점 재검증으로 사용할 수 있다.
+점 따라가기·보정·검증·시선 점·정밀 영역 설정은 제거했다. 기본 감지는 화면 방향을 사용하며 예전 정밀 영역 설정도 적용하지 않는다.
 
 ## 음성
 
@@ -24,11 +24,11 @@ SVG 원본: `overlay/assets/StudySignalTemplate.svg`. macOS 표시에는 투명 
 
 ## v0.11 DMG 설치판
 
-`Study-Signal-0.11.0-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·가벼운 Python 백엔드를 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
+`Study-Signal-0.11.1-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·가벼운 Python 백엔드를 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
 
 설정은 **⌘,**(앱에 포커스가 있을 때) 또는 메뉴 막대 아이콘 → 설정에서 연다. OpenRouter 키를 입력하고 ‘저장 후 앱 다시 시작’을 누른다. 키 입력칸을 비우면 기존 키를 유지한다. 진행 중인 학습은 종료한 뒤 저장한다.
 
-설치판의 설정·보정·학습 기록은 `~/Library/Application Support/Study Signal`에 보관한다. API 키는 이 위치의 `.env`에 현재 사용자만 읽도록 저장하며 DMG에 포함하지 않는다. 정밀 보정과 센서 원본의 기존 저장 정책은 그대로다.
+설치판의 설정·보정·학습 기록은 `~/Library/Application Support/Study Signal`에 보관한다. API 키는 이 위치의 `.env`에 현재 사용자만 읽도록 저장하며 DMG에 포함하지 않는다. 이전 정밀 보정은 불러오지 않는다.
 
 이 빌드는 ad-hoc 무결성 서명이며 Apple Developer ID 서명·Apple 공증은 포함하지 않는다. 다른 Mac이나 인터넷 배포 환경의 Gatekeeper 동작을 공증된 상용 설치판과 같다고 보장하지 않는다. 모델의 연구·비상업용 라이선스 고지는 앱 안에 포함한다.
 

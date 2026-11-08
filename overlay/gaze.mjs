@@ -13,7 +13,7 @@ export class GazeTracker {
    const permission=await window.studyBridge.window('camera-permission');if(!current())return;
    if(!permission.granted)throw new Error('카메라 권한을 시스템 설정에서 확인해주세요.');
    stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},frameRate:{ideal:30,max:30},facingMode:'user'},audio:false});if(!current())return;
-   this.stream=stream;this.cameraId=stream.getVideoTracks()[0].getSettings().deviceId;stream.getVideoTracks()[0].onended=()=>{this.stop();this.update({status:'error',label:'카메라 연결 변경 · 재보정 필요'});};this.video.srcObject=stream;await this.video.play();if(!current())return;this.videoSize=[this.video.videoWidth,this.video.videoHeight].join('x');
+   this.stream=stream;this.cameraId=stream.getVideoTracks()[0].getSettings().deviceId;stream.getVideoTracks()[0].onended=()=>{this.stop();this.update({status:'error',label:'카메라 연결이 바뀌었어요. 감지를 다시 켜주세요.'});};this.video.srcObject=stream;await this.video.play();if(!current())return;this.videoSize=[this.video.videoWidth,this.video.videoHeight].join('x');
    const {FaceLandmarker,FilesetResolver}=await import('./node_modules/@mediapipe/tasks-vision/vision_bundle.mjs');if(!current())return;
    const vision=await FilesetResolver.forVisionTasks(new URL('./node_modules/@mediapipe/tasks-vision/wasm',location.href).href);if(!current())return;
    model=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:new URL('./assets/face_landmarker.task',location.href).href,delegate:'CPU'},runningMode:'VIDEO',numFaces:1,minFaceDetectionConfidence:.6,minFacePresenceConfidence:.6,minTrackingConfidence:.6});if(!current())return;
@@ -76,7 +76,7 @@ export class GazeTracker {
     const pose=facePose(result.faceLandmarks?.[0]);
     const geometryOK=!this.baselinePose||pose&&Math.abs(pose[0]-this.baselinePose[0])<.10&&Math.abs(pose[1]-this.baselinePose[1])<.10&&pose[2]/this.baselinePose[2]>.75&&pose[2]/this.baselinePose[2]<1.3;
     const poseOK=Boolean(geometryOK&&value&&this.baseline&&Math.abs(value[3]-this.baseline[3])<(this.neural ? .25 : .09)&&Math.abs(value[4]-this.baseline[4])<(this.neural ? .25 : .09));
-    if(this.mapping&&value&&!poseOK){this.poseDriftAt??=at;if(at-this.poseDriftAt>1800){this.invalidate();this.update({status:'uncalibrated',label:'자세가 바뀌었어요. 재보정 필요'});}}
+    if(this.mapping&&value&&!poseOK){this.poseDriftAt??=at;if(at-this.poseDriftAt>1800){this.invalidate();this.update({status:'uncalibrated',label:'자세가 바뀌었어요. 화면 방향을 다시 확인해요.'});}}
     else this.poseDriftAt=null;
     const p=value&&this.mapping?this.mapping.predict(value):null;
     const offscreen=p&&(p.nx<0||p.nx>1||p.ny<0||p.ny>1);
