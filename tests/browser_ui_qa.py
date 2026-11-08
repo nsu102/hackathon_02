@@ -88,8 +88,12 @@ with sync_playwright() as p:
  settings('voice-settings');page.locator('#read-answer').uncheck();settings('focus-settings');page.locator('#nag-mute').check();study()
  # Only direction evidence, no pixel coordinates or validated calibration.
  page.evaluate("()=>{const at=performance.now()+22000;for(let t=at-21000;t<=at;t+=100)window.injectGaze({at_ms:t,validated:false,validity:'unknown',pose_ok:false,presence:{ready:true,state:'away',reason:'direction_away'}});}")
- assert page.locator('#focus-notice').is_visible();assert '화면 이탈' in page.locator('#focus-state').inner_text()
+ assert page.locator('#focus-notice').is_visible();assert '화면 이탈' in page.locator('#focus-state').inner_text();assert page.locator('#session-focus').inner_text()=='시선 이탈 중';assert page.locator('#mini-focus').inner_text()=='시선 이탈 중';assert page.locator('#session-focus').get_attribute('data-state')=='away'
  assert page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&a.data.kind==='nag'&&a.data.show)")
+ page.screenshot(path=str(root/'docs/qa/study-away-status.png'),omit_background=True)
+ page.locator('#collapse').click();page.set_viewport_size(dict(width=320,height=64));assert page.locator('#mini-focus').is_visible();assert page.evaluate('document.documentElement.scrollWidth')<=320
+ page.screenshot(path=str(root/'docs/qa/study-away-compact.png'),omit_background=True)
+ page.locator('#collapse').click();page.set_viewport_size(dict(width=440,height=820))
  page.locator('#focus-correction').click();assert page.locator('#focus-notice').is_hidden()
  settings('voice-settings');page.locator('#voice-consent').check();study()
  start_voice();page.wait_for_function("() => document.getElementById('voice-status').textContent.startsWith('녹음 중')")
@@ -98,8 +102,7 @@ with sync_playwright() as p:
  page.wait_for_timeout(1200);release_voice();page.wait_for_function("() => document.getElementById('chat').textContent.includes('CENT는 CXL')")
  audio=page.evaluate("window.actions.find(a=>a.action==='voice-submit').data");assert audio['id']==1 and audio['speech_detected'] and audio['audio'].startswith('GkXf')
  assert not page.evaluate("window.actions.some(a=>a.action==='bubble-update'&&['answer','voice'].includes(a.data.kind))")
- assert page.locator('#session-heart').inner_text()=='72 bpm'
- assert page.evaluate("window.actions.some(a=>a.action==='scratchpad-metrics'&&a.data.bpm===72)")
+ assert page.locator('#session-heart').inner_text()=='72 bpm';assert not page.evaluate("window.actions.some(a=>a.action==='scratchpad-metrics')")
  assert page.evaluate('window.speechRequests.length')==0
  assert page.evaluate("window.padEntries[0].status==='ready'")
  start_voice();page.locator('#voice-cancel').wait_for(state='visible');page.locator('#voice-cancel').click();page.wait_for_timeout(150)

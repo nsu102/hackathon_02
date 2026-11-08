@@ -1,0 +1,20 @@
+{
+  "version": "0.12.1",
+  "installed_from_dmg": true,
+  "codesign_verified": true,
+  "dmg_bytes": 167205704,
+  "dmg_sha256": "940afa550ae7641a86fc28e8c1d9bb6ce16e8348924dd34c868cdbf480685361",
+  "node_passed": 75,
+  "main_ui_passed": 30,
+  "chat_ui_passed": 17,
+  "native_passed": true,
+  "study_status_in_main_only": true,
+  "away_label_in_compact_header": true,
+  "no_status_ipc_to_chat": true,
+  "physical_gaze_accuracy_retested": false,
+  "heart": {
+    "reading": true,
+    "connected": false,
+    "source": "none"
+  }
+}

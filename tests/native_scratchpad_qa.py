@@ -38,11 +38,12 @@ try:
    page.wait_for_timeout(100)
   if not pad:raise RuntimeError('Scratchpad renderer missing')
   bounds=page.evaluate("window.studyBridge.window('overlay-bounds')")
-  assert any(b['width']==340 and b['height']==148 for b in bounds),bounds
+  assert any(b['width']==340 and b['height']==116 for b in bounds),bounds
   assert pad.locator('#conversation').is_hidden()
   assert page.locator('#voice-target,#voice-enable,#voice-shortcut').count()==0
   assert not page.locator('#read-answer').is_checked()
-  assert pad.locator('#chat-clock').inner_text() and 'bpm' in pad.locator('#chat-heart').inner_text()
+  assert pad.locator('#chat-clock,#chat-heart,.focus-status').count()==0
+  assert page.locator('#session-focus').inner_text()
   # A real pad query reaches the main study controller, which gates screen upload on consent.
   pad.locator('#draft').fill('현재 화면을 설명해줘');pad.locator('#add').click()
   pad.locator('.entry.error').wait_for(timeout=10000)
@@ -57,11 +58,11 @@ try:
   pad.locator('.entry.pending').wait_for()
   assert '듣고' in pad.locator('.entry.pending .body').inner_text()
   bounds=page.evaluate("window.studyBridge.window('overlay-bounds')")
-  assert any(b['width']==400 and b['height']==560 for b in bounds),bounds
+  assert any(b['width']==400 and b['height']==520 for b in bounds),bounds
   page.evaluate("async id=>{await window.studyBridge.window('scratchpad-complete',{id,question:'이 문단 번역해줘',message:{content:'캐시는 반복적인 메모리 접근을 줄입니다.',artifact:{kind:'translation',title:'작성된 예제 번역',summary:'현재 보이는 문단 기준',source_note:'QA authored fixture'}}});}",request)
   pad.locator('.summary').wait_for();assert '반복적인' in pad.locator('.body').last.inner_text()
   pad.locator('#toggle').click();pad.locator('#conversation').wait_for(state='hidden')
-  bounds=page.evaluate("window.studyBridge.window('overlay-bounds')");assert any(b['height']==148 and b['width']==340 for b in bounds)
+  bounds=page.evaluate("window.studyBridge.window('overlay-bounds')");assert any(b['height']==116 and b['width']==340 for b in bounds)
   pad.locator('#toggle').click();pad.locator('.summary').wait_for()
   stored=json.loads((qa/'scratchpad/pad.json').read_text());assert len(stored['entries'])==2 and stored['entries'][-1]['status']=='ready'
   page.evaluate("window.studyBridge.window('scratchpad-show')");pad.reload();pad.locator('#conversation').wait_for(state='hidden');pad.locator('#toggle').click();pad.locator('.summary').wait_for();assert pad.locator('.entry').count()==2
@@ -73,7 +74,7 @@ try:
   page.evaluate("window.studyBridge.window('bubble-clear-nag')")
   metadata=[json.loads(line) for line in (root/'.build/native-scratchpad.log').read_text().splitlines() if line.startswith('{') and '"component":"voice-input"' in line]
   assert metadata and metadata[-1]['hotkey'] is False
-  report={'environment':'native Electron; isolated pad; authored text; no external request','packaged':args.executable.name!='Electron','compact_bounds':{'width':340,'height':148},'expanded_bounds':{'width':400,'height':560},'typed_query_reaches_consent_gate':True,'voice_request_expands':True,'collapse_retains_history':True,'reload_restores_compact':True,'shared_opacity':True,'physical_microphone_tested':False,'click_only_voice':True,'voice_hotkey_registered':False,'automatic_screenshot':True,'speech_default_off':True,'heart_and_clock_visible':True,'warning_dialog_does_not_overlap_chat':True}
+  report={'environment':'native Electron; isolated pad; authored text; no external request','packaged':args.executable.name!='Electron','compact_bounds':{'width':340,'height':116},'expanded_bounds':{'width':400,'height':520},'typed_query_reaches_consent_gate':True,'voice_request_expands':True,'collapse_retains_history':True,'reload_restores_compact':True,'shared_opacity':True,'physical_microphone_tested':False,'click_only_voice':True,'voice_hotkey_registered':False,'automatic_screenshot':True,'speech_default_off':True,'study_status_in_main_only':True,'warning_dialog_does_not_overlap_chat':True}
   (root/'docs/qa/native-scratchpad.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n');print(json.dumps(report,ensure_ascii=False))
 finally:
  if process.poll() is None:os.killpg(process.pid,signal.SIGTERM)

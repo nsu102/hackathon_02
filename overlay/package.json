@@ -1,6 +1,6 @@
 {
   "name": "study-signal-overlay",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Local gaze signals, server heart-rate input and a personal study tutor",
   "main": "main.cjs",

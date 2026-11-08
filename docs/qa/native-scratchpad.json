@@ -3,11 +3,11 @@
   "packaged": true,
   "compact_bounds": {
     "width": 340,
-    "height": 148
+    "height": 116
   },
   "expanded_bounds": {
     "width": 400,
-    "height": 560
+    "height": 520
   },
   "typed_query_reaches_consent_gate": true,
   "voice_request_expands": true,
@@ -19,6 +19,6 @@
   "voice_hotkey_registered": false,
   "automatic_screenshot": true,
   "speech_default_off": true,
-  "heart_and_clock_visible": true,
+  "study_status_in_main_only": true,
   "warning_dialog_does_not_overlap_chat": true
 }

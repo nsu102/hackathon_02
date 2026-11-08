@@ -62,7 +62,6 @@ ipcMain.handle('window:action', async (e, action, data) => {
   if (action === 'overlay-bounds') return [win,...(bubbles?.windows()||[]),...(checklist?.windows()||[]),...(scratchpad?.windows()||[])].filter(w=>w&&!w.isDestroyed()&&w.isVisible()).map(w=>w.getBounds());
   if (action === 'scratchpad-context') {scratchpad.context(data);return;}
   if (action === 'scratchpad-voice') {scratchpad.voice(data);return;}
-  if (action === 'scratchpad-metrics') {scratchpad.metrics(data);return;}
   if (action === 'scratchpad-show') {scratchpad.show();return;}
   if (action === 'scratchpad-begin') return scratchpad.begin(data);
   if (action === 'scratchpad-complete') {scratchpad.complete(data?.id,data?.message,data?.question);return;}

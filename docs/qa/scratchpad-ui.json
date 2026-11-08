@@ -1,7 +1,7 @@
 {
   "passed": [
     "failed query expands error and permits retry",
-    "340x148 compact chat with clock and heart rate",
+    "340x116 compact chat without study status",
     "no empty heading or pin/upload controls",
     "typed query expands",
     "question displayed with pending reply",
