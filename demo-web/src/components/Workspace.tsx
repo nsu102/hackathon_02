@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Calibration } from "@/components/Calibration";
+import { ChecklistPanel } from "@/components/ChecklistPanel";
 import { ChatPanel } from "@/components/ChatPanel";
 import { FocusPanel } from "@/components/FocusPanel";
 import { Landing } from "@/components/Landing";
@@ -19,6 +20,17 @@ export function Workspace() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [calibrating, setCalibrating] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(true);
+  // 접힘 상태는 PDF를 연 뒤에만 화면에 쓰이므로 첫 렌더(서버)와 어긋나지 않는다.
+  const [folded, setFolded] = useState(() => {
+    try { return localStorage.getItem("study-plan-folded") === "true"; } catch { return false; }
+  });
+  const toggleFold = useCallback(() => {
+    setFolded((f) => {
+      try { localStorage.setItem("study-plan-folded", String(!f)); } catch { /* 무시 */ }
+      return !f;
+    });
+  }, []);
   const pageRef = useRef(1);
   useEffect(() => { pageRef.current = page; }, [page]);
 
@@ -76,7 +88,7 @@ export function Workspace() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b border-line bg-night/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-3 px-4 sm:px-6">
+        <div className={`mx-auto flex h-14 items-center gap-3 px-4 sm:px-6 ${pdf && showChecklist ? "max-w-[1440px] xl:max-w-[1680px]" : "max-w-[1440px]"}`}>
           <button type="button" onClick={close} className="flex items-center gap-2.5" aria-label="Study Signal 처음 화면">
             <Image src="/brand/study-signal.svg" alt="" width={24} height={24} priority />
             <span className="text-[17px] font-medium tracking-[-0.03em]">Study Signal</span>
@@ -85,6 +97,9 @@ export function Workspace() {
           {pdf && (
             <div className="ml-auto flex min-w-0 items-center gap-3">
               <span className="hidden min-w-0 truncate text-sm text-body sm:block" title={pdf.name}>{pdf.name}</span>
+              {!showChecklist && (
+                <button type="button" onClick={() => setShowChecklist(true)} className="h-8 shrink-0 rounded-full border border-lime/50 px-3 text-xs text-lime hover:bg-lime hover:text-night">체크리스트</button>
+              )}
               <span className="shrink-0 font-serif text-lg text-muted">{page}<span className="text-faint"> / {pdf.pages.length}</span></span>
               <button type="button" onClick={close} className="h-8 shrink-0 rounded-full border border-line-strong px-3 text-xs hover:bg-white/5">다른 PDF</button>
             </div>
@@ -95,7 +110,23 @@ export function Workspace() {
       {!pdf ? (
         <Landing onFile={onFile} onSample={onSample} loading={loading} error={error} />
       ) : (
-        <main className="mx-auto grid w-full max-w-[1440px] flex-1 gap-4 p-4 sm:p-6 lg:h-[calc(100dvh-3.5rem)] lg:min-h-0 lg:flex-none lg:grid-rows-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:overflow-hidden">
+        <main className={`relative mx-auto grid w-full max-w-[1440px] flex-1 gap-4 p-4 sm:p-6 lg:h-[calc(100dvh-3.5rem)] lg:min-h-0 lg:flex-none lg:grid-rows-1 lg:grid-cols-[minmax(0,1fr)_400px] lg:overflow-hidden lg:transition-[grid-template-columns] lg:duration-300 lg:ease-out ${showChecklist ? (folded ? "xl:max-w-[1680px] xl:grid-cols-[64px_minmax(0,1fr)_400px]" : "xl:max-w-[1680px] xl:grid-cols-[290px_minmax(0,1fr)_400px]") : ""}`}>
+          {/* 체크리스트: 휴대폰은 PDF 위, 중간 화면은 PDF 좌상단에 떠 있게(데스크톱 앱처럼), 넓은 화면은 왼쪽 열 */}
+          {showChecklist && (
+            <div className={`lg:absolute lg:top-9 lg:left-9 lg:z-20 xl:static xl:w-auto xl:min-h-0 ${folded ? "lg:w-16" : "lg:w-[290px] xl:overflow-y-auto"}`}>
+              <ChecklistPanel
+                key={pdf.name + pdf.pages.length}
+                fileName={pdf.name}
+                pages={pdf.pages}
+                currentPage={page}
+                focus={focus}
+                onJump={(p) => viewer.current?.scrollToPage(p)}
+                onHide={() => setShowChecklist(false)}
+                folded={folded}
+                onToggleFold={toggleFold}
+              />
+            </div>
+          )}
           <div className="h-[70dvh] min-h-0 overflow-hidden rounded-2xl border border-line bg-raised/60 lg:h-auto">
             <PdfViewer ref={viewer} doc={pdf.doc} onPageChange={setPage} />
           </div>
