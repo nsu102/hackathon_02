@@ -54,9 +54,10 @@ def build_app():
  if default.exists():default.unlink()
  front=resources/'app';front.mkdir()
  for p in (ROOT/'overlay').iterdir():
-  if p.name in {'node_modules','tests','package-lock.json'}:continue
+  if p.name in {'node_modules','tests','package-lock.json'} or p.name.startswith('qa-'):continue
   if p.is_dir():shutil.copytree(p,front/p.name)
   elif p.suffix in {'.cjs','.mjs','.js','.html','.css','.json'}:shutil.copy2(p,front/p.name)
+ assert not list(front.glob('qa-*'))
  modules=front/'node_modules';modules.mkdir()
  # Current UI dependencies; experimental ONNX modules have no role in this build.
  for name in ['@mediapipe','@fontsource','uiohook-napi','node-gyp-build']:

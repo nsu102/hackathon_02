@@ -6,7 +6,7 @@ root=Path(__file__).resolve().parents[1];qa=Path(tempfile.mkdtemp(prefix='simple
 with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
 parser=argparse.ArgumentParser();parser.add_argument('--executable',type=Path,default=root/'overlay/node_modules/electron/dist/Electron.app/Contents/MacOS/Electron');args=parser.parse_args()
 log=(qa/'app.log').open('w');exe=args.executable
-process=subprocess.Popen([str(exe),*([str(root/'overlay')] if exe.name=='Electron' else []),'--study-qa-underlay',f'--remote-debugging-port={port}'],cwd=root,env={**os.environ,'STUDY_QA_DATA':str(qa)},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+process=subprocess.Popen([str(exe),*([str(root/'overlay')] if exe.name=='Electron' else []),'--study-qa',f'--remote-debugging-port={port}'],cwd=root,env={**os.environ,'STUDY_QA_DATA':str(qa)},stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 report={'packaged':exe.name!='Electron','environment':'real Electron and backend; isolated data; camera and AI off; no external requests'}
 try:
  with sync_playwright() as p:

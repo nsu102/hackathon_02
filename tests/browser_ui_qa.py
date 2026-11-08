@@ -27,6 +27,8 @@ with sync_playwright() as p:
  if(action==='selection-open')return {x:-1440,y:0,width:440,height:820,display_id:1};
  if(action==='scratchpad-begin'){const id='pad-'+window.padEntries.length;window.padEntries.push({id,status:'pending'});return id;}if(action==='scratchpad-complete'){const entry=window.padEntries.find(e=>e.id===data.id);if(entry)Object.assign(entry,{status:'ready',message:data.message});}if(action==='scratchpad-fail'){const entry=window.padEntries.find(e=>e.id===data.id);if(entry)entry.status='error';}if(action==='materials-import')return [{name:'notes.pdf',text:'고유 확인 코드 37. CENT는 CXL과 PIM을 결합한 LLM 추론 시스템입니다.',pages:1,truncated:false}];if(action==='voice-configure'){window.pendingTarget=data.target;return {enabled:data.enabled};}if(action==='connection-settings')return {key_configured:true,model:'anthropic/claude-sonnet-5.5'};
  if(action==='voice-cancel')return;
+ if(action==='screen-prepare'){window.typedMessage=data.message;return {png:fixturePNG,display:{x:-1440,y:0,width:1440,height:900,display_id:1}};}
+ if(action==='screen-submit'){const m={id:'typed-answer',role:'assistant',content:'텍스트 질문에 대한 화면 답변',source:'openrouter',mode:'context'};window.testSession.messages.push({id:'typed-user',role:'user',content:window.typedMessage},m);return {message:m};}
  if(action==='voice-submit'){if(window.pendingTarget==='manual')window.voiceEvent({type:'select',data:{png:fixturePNG,display:{display_id:1}}});else{await window.voiceEvent({type:'processing'});await reply();}}
  if(action==='voice-select'){await window.voiceEvent({type:'processing'});await reply();}return null;},
  request:async(method,route,body)=>{const heart={reading:false,bpm:null,message:'미연결',age_seconds:null,connected:false,source:null};
@@ -113,6 +115,9 @@ with sync_playwright() as p:
  start_voice();assert page.locator('#tts-stop').is_hidden()
  page.locator('#collapse').click();page.set_viewport_size(dict(width=320,height=64));assert page.locator('#voice-indicator').is_visible();assert page.evaluate('document.documentElement.scrollWidth')<=320
  page.evaluate("window.voiceEvent({type:'cancel',data:'시험 취소'})");page.locator('#collapse').click();page.set_viewport_size(dict(width=440,height=820))
+ page.evaluate("async()=>{window.padEntries.push({id:'typed-fixture',status:'pending'});await window.appAction({action:'pad-query',value:{id:'typed-fixture',message:'이 문단 설명해줘'}});}")
+ assert page.evaluate("window.actions.some(a=>a.action==='screen-prepare'&&a.data.consent&&a.data.message==='이 문단 설명해줘')")
+ assert page.evaluate("window.padEntries.at(-1).message.content==='텍스트 질문에 대한 화면 답변'")
  page.evaluate("window.appAction({action:'pause'})");page.wait_for_function("() => document.getElementById('pause').textContent==='다시 공부하기'")
  page.locator('#end').click();page.locator('#summary').wait_for(state='visible');page.locator('#new-session').click();assert page.locator('#setup').is_visible()
  # Start again: a stale session cannot turn the next Start click into a no-op.
@@ -123,7 +128,7 @@ with sync_playwright() as p:
  assert not page.evaluate("JSON.stringify(localStorage).includes('fixture-api-key-for-ui-only')")
  assert not page.evaluate("window.actions.some(a=>a.action==='calibration-open'||a.action==='gaze-visible'||a.action==='materials-example')")
  assert not errors,errors
- passed=['failed Start request can be retried','start button ready and clickable','start again after ending','removed calibration and validation UI','removed built-in paper demo','legacy region preference migrated','file upload creates checklist','manual checklist completion and edit','AI plan regeneration consent','checklist visibility','settings separate from study','six collapsed settings groups','390/440px no horizontal overflow','uncalibrated direction triggers away alert','false alarm grace','shortcut begins WebM recording','key release sends screenshot question','cancel discards recording','manual question crop','voice response saved to scratchpad','translation summary saved','cancelled pad request interrupted','natural TTS plays','voice preference saved','recording stops TTS','collapsed recording indicator','session pause/end','API key cleared after save','no raw key in localStorage']
+ passed=['pad text query attaches screen and receives answer','failed Start request can be retried','start button ready and clickable','start again after ending','removed calibration and validation UI','removed built-in paper demo','legacy region preference migrated','file upload creates checklist','manual checklist completion and edit','AI plan regeneration consent','checklist visibility','settings separate from study','six collapsed settings groups','390/440px no horizontal overflow','uncalibrated direction triggers away alert','false alarm grace','shortcut begins WebM recording','key release sends screenshot question','cancel discards recording','manual question crop','voice response saved to scratchpad','translation summary saved','cancelled pad request interrupted','natural TTS plays','voice preference saved','recording stops TTS','collapsed recording indicator','session pause/end','API key cleared after save','no raw key in localStorage']
  (root/'docs/qa/browser-qa.json').write_text(json.dumps(dict(passed=passed,page_errors=errors,environment='headless system Chrome; synthetic microphone and direction; mocked native bridge. No physical accuracy claims.'),ensure_ascii=False,indent=2))
  print(f'Browser UI: {len(passed)} workflows passed; no page errors')
  browser.close()

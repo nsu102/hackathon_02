@@ -1,22 +1,33 @@
 const $=id=>document.getElementById(id),bridge=window.scratchpadBridge;
-let state={entries:[],draft:'',pinned:true},lastEntries='',draftTimer,editing=null;
-function error(text=''){$('error').textContent=text;$('error').hidden=!text;}
+let state={entries:[],draft:'',expanded:false,busy:false},lastEntries='',draftTimer,editing=null,sending=false;
+function error(text=''){$('error').textContent=text;$('error').hidden=!text;if(text&&!state.expanded)bridge.action('expand').catch(()=>{});}
 async function act(name,value){try{error();return await bridge.action(name,value);}catch(e){error(e.message);}}
-function render(value){state=value;if(value.warning)error(value.warning);const context=value.context||{};const names=context.materials||[];$('study-context').textContent=names.length?names.join(' · '):context.has_material?'학습 자료 연결됨 · 현재 화면과 함께 참고해요.':'현재 화면을 보고 정리해요.';$('study-context').title=context.goal||'';$('pin').setAttribute('aria-pressed',String(value.pinned));if(document.activeElement!==$('draft')&&!editing)$('draft').value=value.draft||'';const entries=value.entries.filter(e=>e.kind!=='file');const signature=JSON.stringify(entries);if(signature===lastEntries)return;lastEntries=signature;$('empty').hidden=Boolean(entries.length);$('entries').hidden=!entries.length;
- const nodes=entries.map(entry=>{const row=document.createElement('article');row.className='entry '+entry.status;const head=document.createElement('div');head.className='entry-head';const tag=document.createElement('span');tag.className='tag';tag.textContent=({note:'메모',request:'화면 확인 중',translation:'번역',summary:'요약',answer:'AI 답변',file:'첨부'})[entry.kind]||'메모';const time=document.createElement('time');time.textContent=new Intl.DateTimeFormat('ko',{hour:'numeric',minute:'2-digit'}).format(new Date(entry.created_at));head.append(tag,time);
-  function button(label,callback){const b=document.createElement('button');b.textContent=label;b.onclick=callback;head.append(b);}
-  if(entry.kind!=='file'){button('복사',async()=>{await act('copy',entry.id);if($('error').hidden)$('save-state').textContent='복사했어요';});button('수정',()=>{editing=entry.id;$('draft').value=entry.body;$('draft').focus();$('add').textContent='수정 저장';});}
-  button('삭제',()=>act('remove',entry.id));row.append(head);
-  if(entry.kind!=='note'){const title=document.createElement('h2');title.textContent=entry.title;row.append(title);}const body=document.createElement('div');body.className='body';body.textContent=entry.body;row.append(body);if(entry.summary){const summary=document.createElement('div');summary.className='summary';const label=document.createElement('span');label.className='summary-label';label.textContent='핵심 요약';summary.append(label,document.createTextNode(entry.summary));row.append(summary);}if(entry.source){const source=document.createElement('p');source.className='source';source.textContent=entry.source;row.append(source);}
-  return row;});$('entries').replaceChildren(...nodes);$('entries').scrollTop=$('entries').scrollHeight;
+function render(value){
+ state=value;if(value.warning)error(value.warning);document.body.dataset.expanded=String(Boolean(value.expanded));$('conversation').hidden=!value.expanded;
+ const entries=value.entries.filter(e=>e.kind!=='file');$('toggle').hidden=!entries.length&&!value.expanded;$('toggle').textContent=value.expanded?'접기':'대화';$('toggle').setAttribute('aria-expanded',String(Boolean(value.expanded)));
+ const context=value.context||{};$('study-context').textContent=(context.materials||[]).join(' · ')||'질문할 때의 화면을 함께 참고해요.';$('study-context').title=context.goal||'';
+ $('add').disabled=Boolean(value.busy||sending);$('add').textContent=editing?'수정 저장':value.busy?'답변 중…':'채팅하기';
+ if(document.activeElement!==$('draft')&&!editing)$('draft').value=value.draft||'';
+ const signature=JSON.stringify(entries);if(signature===lastEntries)return;lastEntries=signature;$('empty').hidden=Boolean(entries.length);$('entries').hidden=!entries.length;
+ const nodes=entries.map(entry=>{
+  const row=document.createElement('article');row.className='entry '+entry.status;
+  if(entry.question){const question=document.createElement('p');question.className='question';question.textContent=entry.question;row.append(question);}
+  const head=document.createElement('div');head.className='entry-head';const tag=document.createElement('span');tag.className='tag';tag.textContent=({note:'메모',request:'답변 준비 중',translation:'번역',summary:'요약',answer:'Study Signal'})[entry.kind]||'Study Signal';const time=document.createElement('time');time.textContent=new Intl.DateTimeFormat('ko',{hour:'numeric',minute:'2-digit'}).format(new Date(entry.created_at));head.append(tag,time);
+  function button(label,callback){const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=callback;head.append(b);}
+  if(entry.status!=='pending'){button('복사',()=>act('copy',entry.id));if(entry.kind==='note')button('수정',()=>{editing=entry.id;$('draft').maxLength=60000;$('draft').value=entry.body;$('draft').focus();$('add').disabled=false;$('add').textContent='수정 저장';});button('삭제',()=>act('remove',entry.id));}
+  row.append(head);if(['translation','summary'].includes(entry.kind)){const title=document.createElement('h2');title.textContent=entry.title;row.append(title);}const body=document.createElement('div');body.className='body';body.textContent=entry.body;row.append(body);
+  if(entry.summary){const summary=document.createElement('div');summary.className='summary';const label=document.createElement('span');label.className='summary-label';label.textContent='핵심 요약';summary.append(label,document.createTextNode(entry.summary));row.append(summary);}
+  if(entry.source){const source=document.createElement('p');source.className='source';source.textContent=entry.source;row.append(source);}return row;
+ });$('entries').replaceChildren(...nodes);$('entries').scrollTop=$('entries').scrollHeight;
 }
-async function add(){const body=$('draft').value.trim();if(!body)return;clearTimeout(draftTimer);const id=editing;await act(id?'edit':'add',id?{id,body}:{body});if(!$('error').hidden)return;editing=null;$('draft').value='';$('add').innerHTML='메모 추가 <span>⌘↵</span>';await act('draft','');}
-$('add').onclick=add;$('draft').onkeydown=e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();add();}};
-$('draft').oninput=()=>{if(editing)return;clearTimeout(draftTimer);$('save-state').textContent='저장 중…';draftTimer=setTimeout(async()=>{await act('draft',$('draft').value);$('save-state').textContent='저장됨';},400);};
-$('pin').onclick=()=>act('pin',!state.pinned);$('close').onclick=()=>act('hide');
-// Files have one entry point: the study setup. Keep the pad for text/results.
-document.addEventListener('dragover',e=>e.preventDefault());
-document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)return;const text=e.dataTransfer.getData('text/plain');if(text){$('draft').value+=text;$('draft').dispatchEvent(new Event('input'));$('draft').focus();}});
-document.addEventListener('paste',e=>{if([...e.clipboardData.items].some(i=>i.kind==='file')){e.preventDefault();return;}if(document.activeElement!==$('draft')){const text=e.clipboardData.getData('text/plain');if(text){e.preventDefault();$('draft').value+=text;$('draft').dispatchEvent(new Event('input'));$('draft').focus();}}});
+async function send(){
+ const body=$('draft').value.trim();if(!body||sending||state.busy)return;clearTimeout(draftTimer);sending=true;$('add').disabled=true;
+ try{error();if(editing)await bridge.action('edit',{id:editing,body});else await bridge.action('query',{message:body});editing=null;$('draft').maxLength=4000;if($('draft').value.trim()===body)$('draft').value='';await bridge.action('draft',$('draft').value);}
+ catch(e){error(e.message);}finally{sending=false;$('add').disabled=Boolean(state.busy);$('add').textContent=state.busy?'답변 중…':'채팅하기';}
+}
+$('composer').onsubmit=e=>{e.preventDefault();send();};$('draft').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send();}};
+$('draft').oninput=()=>{if(editing)return;clearTimeout(draftTimer);const text=$('draft').value;draftTimer=setTimeout(()=>act('draft',text),400);};
+$('toggle').onclick=()=>act(state.expanded?'collapse':'expand');$('close').onclick=()=>act('hide');
+document.addEventListener('dragover',e=>e.preventDefault());document.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)return;const text=e.dataTransfer.getData('text/plain');if(text){$('draft').value=($('draft').value+text).slice(0,4000);$('draft').dispatchEvent(new Event('input'));$('draft').focus();}});
 function opacity(){document.documentElement.style.setProperty('--overlay-alpha',Math.min(98,Math.max(72,Number(localStorage.getItem('study-opacity'))||90))/100);}opacity();window.addEventListener('storage',e=>{if(e.key==='study-opacity')opacity();});
 bridge.onState(render);bridge.action('ready').then(render).catch(e=>error(e.message));

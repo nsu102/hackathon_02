@@ -5,6 +5,7 @@ import {setupConnection} from './connection-ui.mjs';
 import {setupMaterials} from './materials-ui.mjs';
 import {setupSpeech} from './speech.mjs';
 import {setupPlan} from './plan-ui.mjs';
+import {selectRegion} from './regions.mjs';
 const $=id=>document.getElementById(id),bridge=window.studyBridge;
 let voice=null,session=null,ready=false,busy=false,anchor=null,heartReading=false,lastMessageIds=new Set(),materials=null,bubbleConfigured=false,lastUserText='',nagBubbleVisible=false,planner=null;
 function syncPad(){if(materials)bridge.window('scratchpad-context',{goal:$('goal').value.trim(),materials:materials.names(),has_material:Boolean(materials.text().trim())}).catch(()=>{});}
@@ -18,7 +19,8 @@ function addMessage(m){if(lastMessageIds.has(m.id))return;lastMessageIds.add(m.i
 function render(v){session=v;syncPad();anchor={seconds:v.elapsed_seconds,at:performance.now(),running:v.status==='running'};$('goal-display').textContent=v.goal;$('setup').hidden=true;$('learning').hidden=v.status==='ended';$('summary').hidden=v.status!=='ended';$('timer-label').textContent=v.status==='paused'?'쉬는 중':v.status==='ended'?'학습 기록':'함께 공부한 시간';$('minutes').disabled=true;$('pause').textContent=v.status==='paused'?'다시 공부하기':'잠깐 쉬기';$('focus-panel').hidden=v.status==='ended';for(const m of v.messages)addMessage(m);heart(v.heart);$('personalization').textContent=`불필요한 알림 ${v.personalization.dismissals}회 조정 · 도움이 된 답변 ${v.personalization.helpful}개`;
 if(v.summary)$('summary-text').textContent=`공부한 시간 ${Math.floor(v.summary.studied_seconds/60)}분 ${v.summary.studied_seconds%60}초\n도움 요청 ${v.summary.help_requests}회 · 도움이 된 답변 ${v.summary.helpful_feedback}개\n\n${v.summary.note}`;clock();}
 const focus=new FocusController(event=>{if(session&&session.status!=='ended')bridge.request('POST',`/study/sessions/${session.id}/focus-events`,event).catch(e=>error(e.message));});
-voice=setupVoice({speaker:speech,onActivate:async()=>{if(!session||session.status==='ended')await startStudy();if(session.status==='paused')render(await bridge.request('POST',`/study/sessions/${session.id}/pause`,{paused:false}));if(!session.ai_enabled)throw new Error('설정에서 AI 도움을 켠 뒤 새 학습을 시작해주세요.');},onStatus:state=>showBubble({kind:'voice',...state,question:'',show:true}),getSession:()=>session?{...session,busy:busy||session.busy}:null,error,onAnswer:async()=>{try{render(await bridge.request('GET',`/study/sessions/${session.id}`));}catch(e){error(e.message);}}});
+async function ensureAIStudy(){if(!session||session.status==='ended')await startStudy();if(!session.ai_enabled)throw new Error('설정에서 AI 도움을 켠 뒤 새 학습을 시작해주세요.');if(session.status==='paused')render(await bridge.request('POST',`/study/sessions/${session.id}/pause`,{paused:false}));}
+voice=setupVoice({speaker:speech,onActivate:ensureAIStudy,onStatus:state=>showBubble({kind:'voice',...state,question:'',show:true}),getSession:()=>session?{...session,busy:busy||session.busy}:null,error,onAnswer:async()=>{try{render(await bridge.request('GET',`/study/sessions/${session.id}`));}catch(e){error(e.message);}}});
 materials=setupMaterials({error,busy:()=>Boolean(busy||session?.busy||voice.isHelping()),onChange:async(text,count)=>{if(session&&session.status!=='ended')render(await bridge.request('POST',`/study/sessions/${session.id}/materials`,{material:text}));showBubble({kind:'info',text:`자료 ${count}개를 준비했어요. 질문할 때 현재 화면과 함께 참고할게요.`,phase:'idle',show:true});planner?.materialChanged();syncPad();}});
 planner=setupPlan({bridge,material:()=>materials.text(),goal:()=>$('goal').value});
 $('goal').addEventListener('change',()=>{syncPad();if(materials.text().trim())planner.materialChanged();});
@@ -75,7 +77,23 @@ function openSettings(id='settings'){
 function syncView(){const settings=!$('settings').hidden;$('study-view').hidden=settings;$('settings-toggle').textContent=settings?'학습으로 돌아가기':'설정';$('settings-back').hidden=!settings;}
 new MutationObserver(syncView).observe($('settings'),{attributes:true,attributeFilter:['hidden']});syncView();
 $('settings-back').onclick=()=>{$('settings').hidden=true;};
+async function askFromPad(value){
+ if(busy||voice.isHelping()){await bridge.window('scratchpad-fail',{id:value.id,reason:'진행 중인 질문이 끝난 뒤 다시 물어봐주세요.'});return;}
+ busy=true;speech.stop();
+ try{
+  if(!$('voice-consent').checked){openSettings('voice-settings');await bridge.window('show-main',{section:'voice-settings'});throw new Error('설정에서 현재 화면·자료 전송에 동의한 뒤 질문해주세요.');}
+  await ensureAIStudy();await bridge.window('gaze-display',{display_id:$('monitor').value});
+  const frame=await bridge.window('screen-prepare',{message:value.message,consent:true});
+  const rect=$('voice-target').value==='manual'?await selectRegion('질문할 부분 선택',{display_id:frame.display.display_id,preview:frame.png}):frame.display;
+  const result=await bridge.window('screen-submit',rect);
+  await bridge.window('scratchpad-complete',{id:value.id,message:result.message,question:value.message});
+  render(await bridge.request('GET',`/study/sessions/${session.id}`));
+  if($('read-answer').checked)speech.speak(result.message.artifact?'정리한 내용을 확인해 주세요.':result.message.content,'answer');
+ }catch(e){await bridge.window('screen-cancel').catch(()=>{});await bridge.window('scratchpad-fail',{id:value.id,reason:e.message}).catch(()=>{});error(e.message);}
+ finally{busy=false;}
+}
 bridge.onAppAction?.(async event=>{
+ if(event.action==='pad-query'){await askFromPad(event.value);return;}
  if(['voice-settings','focus-settings'].includes(event.action))openSettings(event.action);
  if(event.action==='plan-settings')openSettings('plan-settings');
  if(event.action==='plan-show')planner.show();

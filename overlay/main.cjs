@@ -13,10 +13,9 @@ runtimeTools.initialize(runtime);
 const neuralWorker=new NeuralWorker(root,{executable:runtime.gazeService,weightsDir:runtime.models});
 const gazeInstaller=require('./gaze-installer.cjs').createGazeInstaller({root:runtime.gazeRoot,core:runtime.service,manifest:runtime.gazeManifest,development:app.isPackaged?null:{python:path.join(root,'.gaze-venv/bin/python'),weights:path.join(root,'data/models/unigaze/unigaze_l16_joint.safetensors')},onState:state=>win?.webContents.send('gaze-install:state',state)});
 let connectionSettings={key_configured:false,model:'anthropic/claude-sonnet-5.5'};
-let qaUnderlay=null;
 let win, child, endpoint, token, activeId, readiness, collapsed = false, bounds, quitting = false, cameraIntent = 0, calibrationBounds = null, gazeDisplay = null, pointerWin = null, voice = null, micIntent = 0,studyTray=null,bubbles=null,checklist=null,scratchpad=null,captureSuppressed=false;
 fs.mkdirSync(path.join(root, 'data', 'electron-study'), { recursive: true });
-const qaData=process.argv.includes('--study-qa-underlay')&&process.env.STUDY_QA_DATA?path.resolve(process.env.STUDY_QA_DATA):null;
+const qaData=process.argv.includes('--study-qa')&&process.env.STUDY_QA_DATA?path.resolve(process.env.STUDY_QA_DATA):null;
 app.setPath('userData',qaData?path.join(qaData,'electron-study'):path.join(root,'data','electron-study'));
 protocol.registerSchemesAsPrivileged([{ scheme: 'study', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
 function validSender(e) { if (e.sender !== win?.webContents || !e.senderFrame.url.startsWith('study://app/')) throw new Error('허용되지 않은 창입니다.'); }
@@ -63,8 +62,8 @@ ipcMain.handle('window:action', async (e, action, data) => {
   if (action === 'overlay-bounds') return [win,...(bubbles?.windows()||[]),...(checklist?.windows()||[]),...(scratchpad?.windows()||[])].filter(w=>w&&!w.isDestroyed()&&w.isVisible()).map(w=>w.getBounds());
   if (action === 'scratchpad-context') {scratchpad.context(data);return;}
   if (action === 'scratchpad-show') {scratchpad.show();return;}
-  if (action === 'scratchpad-begin') return scratchpad.begin();
-  if (action === 'scratchpad-complete') {scratchpad.complete(data?.id,data?.message);return;}
+  if (action === 'scratchpad-begin') return scratchpad.begin(data);
+  if (action === 'scratchpad-complete') {scratchpad.complete(data?.id,data?.message,data?.question);return;}
   if (action === 'scratchpad-fail') {scratchpad.fail(data?.id,data?.reason);return;}
   if (action === 'show-main') {showMain(data?.section||'settings');return;}
   if (action === 'checklist-update') {checklist?.update(data);return;}
@@ -179,7 +178,7 @@ else app.whenReady().then(async () => {
   win.webContents.session.setPermissionRequestHandler((contents, permission, callback, details) => callback(contents === win.webContents && permission === 'media' && (details.mediaTypes?.includes('audio') ? micIntent > Date.now() : cameraIntent > Date.now())));
   bubbles=require('./bubbles.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),action:(action,value)=>{if(['settings','history','materials'].includes(action))showMain(action);else win?.webContents.send('app:action',{action:'bubble-'+action,value});}});
   checklist=require('./checklist.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),action:(name,value)=>{if(name==='settings')showMain('plan-settings');else win?.webContents.send('app:action',{action:'plan-'+name,value});}});
-  scratchpad=require('./scratchpad.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),folder:path.join(qaData||path.join(root,'data'),'scratchpad'),copyText:text=>clipboard.writeText(text),onVisibility:shown=>{checklist.suppress(captureSuppressed||shown);if(shown)checklist.hide();else if(!captureSuppressed)checklist.update({});}});
+  scratchpad=require('./scratchpad.cjs')({BrowserWindow,display:()=>gazeDisplay||screen.getPrimaryDisplay(),folder:path.join(qaData||path.join(root,'data'),'scratchpad'),copyText:text=>clipboard.writeText(text),onQuery:async value=>{const ready=await readiness;if(!ready?.ok)throw new Error('학습 서버를 다시 연결해주세요.');if(!win||win.isDestroyed())throw new Error('앱을 다시 열어주세요.');win.webContents.send('app:action',{action:'pad-query',value});},onVisibility:shown=>{checklist.suppress(captureSuppressed||shown);if(shown)checklist.hide();else if(!captureSuppressed)checklist.update({});}});
   voice=await require('./native-voice.cjs')({win:()=>win,display:()=>gazeDisplay,api,systemPreferences,globalShortcut,desktopCapturer,pointer:()=>pointerWin,onStart:()=>{micIntent=Date.now()+15000;},extraWindows:()=>[...bubbles.windows(),...checklist.windows(),...scratchpad.windows()],onCapture:active=>{captureSuppressed=active;bubbles.suppress(active);scratchpad.suppress(active);checklist.suppress(active||scratchpad.isShown());},screen});
   powerMonitor.on('suspend',()=>voice.cancel('잠자기 전환으로 녹음을 폐기했어요.'));
   powerMonitor.on('lock-screen',()=>voice.cancel('화면 잠금으로 녹음을 폐기했어요.'));
@@ -193,19 +192,15 @@ else app.whenReady().then(async () => {
   screen.on('display-removed', (_, display) => {if(gazeDisplay&&display.id===gazeDisplay.id)invalidateDisplay();});
   readiness = startBackend().then(health => ({ ok: true, health }), () => ({ ok: false, message: '학습 서버를 시작하지 못했어요. Python과 .env를 확인해주세요.' }));
   const show=(section)=>showMain(section||'history');
-  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Study Signal',submenu:[{label:'스크래치패드',accelerator:'CommandOrControl+Shift+P',click:()=>scratchpad.show()},{label:'설정…',accelerator:'CommandOrControl+,',click:()=>show('settings')},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{label:'Study Signal 종료',accelerator:'CommandOrControl+Q',click:()=>app.quit()}]},{role:'editMenu'},{role:'windowMenu'}]));
+  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Study Signal',submenu:[{label:'채팅 열기',accelerator:'CommandOrControl+Shift+P',click:()=>scratchpad.show()},{label:'설정…',accelerator:'CommandOrControl+,',click:()=>show('settings')},{type:'separator'},{role:'hide'},{role:'hideOthers'},{role:'unhide'},{type:'separator'},{label:'Study Signal 종료',accelerator:'CommandOrControl+Q',click:()=>app.quit()}]},{role:'editMenu'},{role:'windowMenu'}]));
   studyTray=require('./tray.cjs')({Tray,Menu,nativeImage,iconPath:path.join(__dirname,'assets/StudySignalTemplate.png'),show,action:(action,value)=>{if(action==='scratchpad'){scratchpad.show();return;}if(action==='plan-show')scratchpad.hide();show();win?.webContents.send('app:action',{action,value});},quit:()=>app.quit()});
   win.loadURL('study://app/index.html'); win.once('ready-to-show', () => {if(process.env.STUDY_NATIVE_QA==='1')setTimeout(()=>console.info(JSON.stringify({component:'study-menu-bar',...studyTray.inspect()})),1500);});
-  if(process.argv.includes('--study-qa-underlay')){
-    qaUnderlay=new BrowserWindow({...screen.getPrimaryDisplay().bounds,frame:false,show:true,backgroundColor:'#f7f8f2',webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false}});
-    qaUnderlay.setAlwaysOnTop(true,'screen-saver');qaUnderlay.setBounds(screen.getPrimaryDisplay().bounds);qaUnderlay.loadURL('study://app/qa-underlay.html');
-  }
   win.on('close',event=>{if(!quitting){event.preventDefault();voice?.cancel('창을 숨겨 녹음을 취소했어요.');win.hide();pointerWin?.hide();}});
   win.on('closed', () => { win = null; });
-  app.on('second-instance', () => show());app.on('activate',()=>show());
+  app.on('second-instance', () => scratchpad.show());app.on('activate',()=>scratchpad.show());
   globalShortcut.register('CommandOrControl+Shift+Space', () => {if(win?.isVisible()||bubbles.windows().some(w=>w.isVisible())){win.hide();bubbles.hide();}else show();});
 });
 app.on('before-quit', e => {
-  if (quitting) return; quitting = true; e.preventDefault(); gazeInstaller.cancel();voice?.disable(); neuralWorker.stop(); globalShortcut.unregisterAll(); pointerWin?.close();studyTray?.destroy();bubbles?.destroy();checklist?.destroy();scratchpad?.destroy();qaUnderlay?.destroy();
+  if (quitting) return; quitting = true; e.preventDefault(); gazeInstaller.cancel();voice?.disable(); neuralWorker.stop(); globalShortcut.unregisterAll(); pointerWin?.close();studyTray?.destroy();bubbles?.destroy();checklist?.destroy();scratchpad?.destroy();
   Promise.race([activeId ? api('POST', `/study/sessions/${activeId}/end`, {}) : Promise.resolve(), new Promise(r => setTimeout(r, 500))]).catch(() => {}).finally(() => { child?.kill('SIGINT'); app.exit(0); });
 });

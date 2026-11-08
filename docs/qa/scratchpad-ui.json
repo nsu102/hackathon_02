@@ -1,18 +1,23 @@
 {
   "passed": [
-    "free text note",
-    "draft survives reload",
-    "no duplicate file input or file-drop upload",
-    "study material names shared and refreshed",
-    "same computed theme as main study window",
-    "pin setting",
-    "acknowledgement placeholder",
-    "translation and summary together",
+    "failed query expands error and permits retry",
+    "340x116 initial compact composer",
+    "no empty heading or pin/upload controls",
+    "typed query expands",
+    "question displayed with pending reply",
+    "pending disables duplicate submit",
+    "answer preserves material context",
+    "collapse retains conversation",
+    "history reopens",
     "copy action",
-    "safe text rendering",
-    "delete entry",
-    "360/420/720px no overflow"
+    "draft survives restart in compact mode",
+    "Enter sends question",
+    "translation and summary together",
+    "voice request expands",
+    "untrusted response stays text",
+    "delete completed answer",
+    "300/340/400px no horizontal overflow"
   ],
   "page_errors": [],
-  "environment": "headless Chrome; owned local IPC fixture"
+  "environment": "headless Chrome; owned IPC fixture; no external model"
 }

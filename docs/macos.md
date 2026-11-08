@@ -24,7 +24,7 @@ SVG 원본: `overlay/assets/StudySignalTemplate.svg`. macOS 표시에는 투명 
 
 ## v0.11 DMG 설치판
 
-`Study-Signal-0.11.1-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·가벼운 Python 백엔드를 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
+`Study-Signal-0.11.2-arm64.dmg`는 Apple Silicon(M1 이상), macOS 15 이상용이다. DMG를 열어 Study Signal.app을 Applications로 옮겨 실행한다. Electron·가벼운 Python 백엔드를 포함해 Node.js/Homebrew/Python을 별도로 설치하지 않는다.
 
 설정은 **⌘,**(앱에 포커스가 있을 때) 또는 메뉴 막대 아이콘 → 설정에서 연다. OpenRouter 키를 입력하고 ‘저장 후 앱 다시 시작’을 누른다. 키 입력칸을 비우면 기존 키를 유지한다. 진행 중인 학습은 종료한 뒤 저장한다.
 

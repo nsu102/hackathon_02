@@ -7,7 +7,7 @@ module.exports=function createStudyTray({Tray,Menu,nativeImage,iconPath,show,act
   tray.setContextMenu(Menu.buildFromTemplate([
    {label:'Study Signal',enabled:false},{label:state.focus,enabled:false},{type:'separator'},
    {label:'도우미 열기',click:()=>show()},
-   {label:'스크래치패드 열기',click:()=>action('scratchpad')},
+   {label:'채팅 열기',click:()=>action('scratchpad')},
    {label:'학습 체크리스트 표시',click:()=>action('plan-show')},
    {label:'설정…',accelerator:'CommandOrControl+,',click:()=>show('settings')},
    {type:'separator'},

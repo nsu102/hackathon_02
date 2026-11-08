@@ -38,7 +38,7 @@ export function setupVoice({getSession,onAnswer,error,onStatus=()=>{},speaker,on
     if(discard||current!==generation)return;status('질문을 받아 적고, 고정한 화면을 읽고 있어요…','processing');
     try{await bridge.window('voice-submit',{id,audio:btoa(binary),duration_ms:duration,speech_detected:true});}catch(e){await fail(e.message);}
    };
-   recorder.start();status('녹음 중 · 단축키를 놓으면 전송 · 최대 20초','recording');
+   recorder.start();status('녹음 중 · 단축키를 놓으면 전송 · 최대 20초','recording');if(!padRequest)padRequest=bridge.window('scratchpad-begin',{listening:true}).catch(()=>null);
   }catch(e){if(current===generation)await fail(e.message);}
  }
  async function permissions(){try{const p=await bridge.window('permission-status');if(!p)return;const names={granted:'허용',denied:'거절',restricted:'제한',unknown:'확인 필요','not-determined':'아직 요청 전'};$('permission-status').textContent=`${p.runtime} · 마이크 ${names[p.microphone]||p.microphone} · 화면 ${names[p.screen]||p.screen} · 단축키 감지 ${p.accessibility?'허용':'손쉬운 사용 필요'}`;}catch(e){$('permission-status').textContent=e.message;}}
@@ -75,7 +75,7 @@ export function setupVoice({getSession,onAnswer,error,onStatus=()=>{},speaker,on
   }
   if(event.type==='answer'){
    const current=generation,pending=padRequest;padRequest=null;
-   try{const padId=pending?await pending:null;if(current!==generation){await bridge.window('scratchpad-fail',{id:padId,reason:'요청이 취소됐어요.'});return;}await bridge.window('scratchpad-complete',{id:padId,message:event.data.message});}catch(e){error('답변은 받았지만 패드에 저장하지 못했어요. '+e.message);}
+   try{const padId=pending?await pending:null;if(current!==generation){await bridge.window('scratchpad-fail',{id:padId,reason:'요청이 취소됐어요.'});return;}await bridge.window('scratchpad-complete',{id:padId,message:event.data.message,question:event.data.transcript});}catch(e){error('답변은 받았지만 패드에 저장하지 못했어요. '+e.message);}
    if(current!==generation)return;
    helping=false;status('답변했어요. 이어서 궁금한 걸 말해주세요.','idle');await onAnswer(event.data);
    if($('read-answer').checked)speaker.speak(event.data.message.artifact?'스크래치패드에서 확인해 주세요.':event.data.message.content,'answer');

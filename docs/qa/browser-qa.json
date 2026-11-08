@@ -1,5 +1,6 @@
 {
   "passed": [
+    "pad text query attaches screen and receives answer",
     "failed Start request can be retried",
     "start button ready and clickable",
     "start again after ending",

@@ -1,24 +1,18 @@
 {
-  "environment": "native Electron; isolated local pad; authored text; no external request",
-  "packaged": true,
-  "gaze_optional": true,
-  "gaze_installed": false,
-  "camera_not_started_without_gaze": true,
-  "native_window_opened": true,
-  "shared_material_names": true,
-  "no_duplicate_upload": true,
+  "environment": "native Electron; isolated pad; authored text; no external request",
+  "packaged": false,
+  "compact_bounds": {
+    "width": 340,
+    "height": 116
+  },
+  "expanded_bounds": {
+    "width": 400,
+    "height": 520
+  },
+  "typed_query_reaches_consent_gate": true,
+  "voice_request_expands": true,
+  "collapse_retains_history": true,
+  "reload_restores_compact": true,
   "shared_opacity": true,
-  "note_saved": true,
-  "request_completed_in_place": true,
-  "translation_summary_displayed": true,
-  "reload_restored": true,
-  "overlay_bounds": [
-    {
-      "x": 20,
-      "y": 58,
-      "width": 420,
-      "height": 560
-    }
-  ],
   "physical_microphone_tested": false
 }
