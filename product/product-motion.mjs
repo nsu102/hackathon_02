@@ -7,6 +7,33 @@ const html = document.documentElement;
 if (html.classList.contains('pm')) init();
 
 function init() {
+  // ---------------------------------------------------------------- hero numbers
+  // once the facts have risen in (CSS entrance at .56s), each number counts up from 0 and pops
+  document.querySelectorAll('[data-pm-count]').forEach((el, i) => {
+    const m = el.textContent.trim().match(/^(\d+)(.*)$/);
+    if (!m) return;
+    const target = +m[1];
+    const num = document.createElement('span');
+    num.className = 'pm-num';
+    num.textContent = m[1];
+    el.replaceChildren(num, m[2]);
+    num.textContent = '0';
+    setTimeout(() => {
+      // hold the final number's width (measured now, in the loaded font) so the suffix never shifts
+      num.textContent = m[1];
+      num.style.minWidth = `${num.getBoundingClientRect().width}px`;
+      num.textContent = '0';
+      el.classList.add('pm-pop');
+      const t0 = performance.now(), ms = 1400;
+      const step = now => {
+        const k = Math.min(1, (now - t0) / ms);
+        num.textContent = String(Math.round(target * (1 - Math.pow(1 - k, 3))));
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }, 650 + i * 120);
+  });
+
   // ---------------------------------------------------------------- reveals (once, on scroll)
   const groups = [
     ['.product-copy h2', '.product-lead', '.feature-list > div', '.product-copy > .link'],
