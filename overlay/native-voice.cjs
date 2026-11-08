@@ -1,5 +1,5 @@
 const {Hold}=require('./hold.cjs');
-module.exports=async function createVoice({win,display,api,systemPreferences,globalShortcut,desktopCapturer,pointer,screen,extraWindows=()=>[],onCapture=()=>{},onStart=()=>{},keyHook=()=>require('uiohook-napi'),now=()=>performance.now(),wait=ms=>new Promise(r=>setTimeout(r,ms))}){
+module.exports=async function createVoice({win,display,api,systemPreferences,globalShortcut,desktopCapturer,pointer,screen,extraWindows=()=>[],onCapture=()=>{},onStart=()=>{},keyHook=()=>require('uiohook-napi'),now=()=>performance.now(),wait=ms=>new Promise(r=>setTimeout(r,ms)),platform=process.platform,appLabel='Study Signal',captureTimeoutMs=8000}){
  const {GazeBuffer,dipToPixels,inside}=await import('./focus.mjs');
  const buffer=new GazeBuffer();let enabled=false,session=null,hook=null,shortcut=null,keycode=null,frozen=null,timer=null,manual=null,uploading=false,epoch=0,screenPending=null,control='hotkey',targetMode='gaze',hotkeyHeld=false,activationPending=false,ticket=0,capturing=false;
  const send=(type,data)=>{const w=win();if(w&&!w.isDestroyed())w.webContents.send('voice:event',{type,data});};
@@ -20,17 +20,23 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   if(!enabled||!activationPending||!hotkeyHeld||data?.ticket!==ticket||!session)throw new Error('키를 놓았거나 준비가 취소돼 녹음하지 않았어요. 단축키를 누른 채 말해주세요.');
   activationPending=false;return {started:await start('hotkey')};
  }
+ function permissionError(){return new Error(`${appLabel}의 화면 녹화 권한이 연결되지 않았어요. 설정 → 음성 질문 → 권한 확인에서 ‘화면 권한 복구’를 누른 뒤, macOS에서 현재 앱을 다시 허용해주세요.`);}
  async function capture(){
   const d=display();if(!d)throw new Error('학습 모니터를 먼저 선택해주세요.');
-  if(process.platform==='darwin'&&['denied','restricted'].includes(systemPreferences.getMediaAccessStatus('screen')))throw new Error('시스템 설정 → 개인정보 보호 및 보안 → 화면 및 시스템 오디오 녹음에서 Study Signal/Electron 화면 권한을 허용하고 앱을 다시 시작해주세요.');
+  if(platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')==='restricted')throw new Error('이 Mac에서 화면 녹화가 시스템 정책으로 제한되어 있어요.');
   const w=win(),p=pointer(),wv=w.isVisible(),pv=p?.isVisible(),extras=extraWindows().filter(x=>x&&!x.isDestroyed()&&x.isVisible());
   onCapture(true);
   try{
    w.hide();p?.hide();extras.forEach(x=>x.hide());await wait(180);
-   const sources=await desktopCapturer.getSources({types:['screen'],thumbnailSize:{width:Math.round(d.bounds.width*d.scaleFactor),height:Math.round(d.bounds.height*d.scaleFactor)}});
+   // macOS preflight also reports denied before the first request. Let the OS
+   // present its consent prompt, but never use a frame without a granted status.
+   let timeout;const request=desktopCapturer.getSources({types:['screen'],thumbnailSize:{width:Math.round(d.bounds.width*d.scaleFactor),height:Math.round(d.bounds.height*d.scaleFactor)}});
+   let sources;try{sources=await Promise.race([request,new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('화면 캡처 응답이 지연됐어요. 권한 창을 확인한 뒤 다시 테스트해주세요.')),captureTimeoutMs);})]);}
+   catch(e){if(platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')!=='granted')throw permissionError();throw e;}
+   finally{clearTimeout(timeout);}
+   if(platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')!=='granted')throw permissionError();
    const image=sources.find(s=>String(s.display_id)===String(d.id))?.thumbnail;
    if(!image||image.isEmpty())throw new Error('선택한 모니터를 캡처하지 못했어요.');
-   if(process.platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')!=='granted')throw new Error('화면 권한을 허용한 뒤 앱을 다시 시작해주세요.');
    return {image,display:{...d.bounds,display_id:d.id},captured_at_ms:now()};
   }finally{if(wv&&!w.isDestroyed())w.showInactive();if(pv&&p&&!p.isDestroyed())p.showInactive();extras.forEach(x=>{if(!x.isDestroyed())x.showInactive();});onCapture(false);}
  }
@@ -47,7 +53,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   if(!['screen','manual'].includes(data.target))throw new Error('질문할 화면 범위를 확인해주세요.');
   if(!session||hold.state!=='idle'||uploading||manual||screenPending)throw new Error('진행 중인 AI 학습에서 질문을 하나씩 보내주세요.');
   const current=epoch;
-  if(process.platform==='darwin'&&!await systemPreferences.askForMediaAccess('microphone'))throw new Error('마이크 권한을 허용해주세요.');
+  if(platform==='darwin'&&!await systemPreferences.askForMediaAccess('microphone'))throw new Error('마이크 권한을 허용해주세요.');
   if(current!==epoch)throw new Error('음성 질문을 취소했어요.');
   if(!await start('button',data.target))throw new Error('화면을 준비하는 동안 학습 상태가 바뀌었거나 질문이 취소됐어요. 다시 말하기를 눌러주세요.');
   return {started:true};
@@ -59,8 +65,8 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   if(!data.enabled)return {enabled:false};
   if(data.consent!==true)throw new Error('음성과 선택 화면의 서버 전송에 동의해주세요.');
   if(data.target!==undefined&&!['screen','manual','gaze'].includes(data.target))throw new Error('질문할 화면 범위를 확인해주세요.');targetMode=data.target||'gaze';
-  if(process.platform==='darwin'&&!systemPreferences.isTrustedAccessibilityClient(true))throw new Error('시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용에서 Study Signal/Electron을 허용한 뒤 다시 켜주세요. 키 해제 감지에는 입력 모니터링 권한도 필요할 수 있어요.');
-  if(process.platform==='darwin'&&!await systemPreferences.askForMediaAccess('microphone'))throw new Error('마이크 권한을 허용해주세요.');
+  if(platform==='darwin'&&!systemPreferences.isTrustedAccessibilityClient(true))throw new Error('시스템 설정 → 개인정보 보호 및 보안 → 손쉬운 사용에서 Study Signal/Electron을 허용한 뒤 다시 켜주세요. 키 해제 감지에는 입력 모니터링 권한도 필요할 수 있어요.');
+  if(platform==='darwin'&&!await systemPreferences.askForMediaAccess('microphone'))throw new Error('마이크 권한을 허용해주세요.');
   const accelerator=data.shortcut||'CommandOrControl+Shift+Enter';
   if(typeof accelerator!=='string'||! /^(CommandOrControl|Command|Control|Alt)(\+(Shift|Alt|Control))*\+(Enter|Space|F[1-9]|F1[0-2])$/.test(accelerator))throw new Error('단축키는 CommandOrControl+Shift+Enter 같은 조합을 사용해주세요.');
   const {uIOhook,UiohookKey}=keyHook();keycode=UiohookKey[accelerator.split('+').at(-1)];
@@ -84,7 +90,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   if(!frozen||data.id!==frozen.id||hold.state!=='released'||uploading)throw new Error('보내기 동작이 확인되지 않아 전송하지 않았어요.');
   clearTimeout(timer);hold.done();
   if(data.speech_detected!==true){frozen=null;throw new Error('질문 음성이 들리지 않았어요.');}
-  if(process.platform==='darwin'&&(systemPreferences.getMediaAccessStatus('microphone')!=='granted'||systemPreferences.getMediaAccessStatus('screen')!=='granted'||control==='hotkey'&&!systemPreferences.isTrustedAccessibilityClient(false))){frozen=null;throw new Error('마이크·화면 또는 키 감지 권한이 철회되어 녹음을 폐기했어요.');}
+  if(platform==='darwin'&&(systemPreferences.getMediaAccessStatus('microphone')!=='granted'||systemPreferences.getMediaAccessStatus('screen')!=='granted'||control==='hotkey'&&!systemPreferences.isTrustedAccessibilityClient(false))){frozen=null;throw new Error('마이크·화면 또는 키 감지 권한이 철회되어 녹음을 폐기했어요.');}
   if(typeof data.audio!=='string'||data.audio.length>2700000||!Number.isFinite(data.duration_ms)||data.duration_ms>20000){frozen=null;throw new Error('녹음 형식을 확인해주세요.');}
   const frame=frozen;frozen=null;
   if(frame.target==='screen')return upload({...payloadFrame(frame,frame.display,'screen'),audio:data.audio,duration_ms:data.duration_ms,speech_detected:true,consent:true},session);
@@ -105,7 +111,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
  }
  // Text questions share the same local capture boundary, without microphone/key-hook access.
  async function screenPrepare(data){
-  if(!session||uploading||manual||frozen||screenPending||hold.state!=='idle')throw new Error('진행 중인 AI 학습에서 질문을 하나씩 보내주세요.');
+  if(!session||capturing||uploading||manual||frozen||screenPending||hold.state!=='idle')throw new Error('진행 중인 AI 학습에서 질문을 하나씩 보내주세요.');
   if(data?.consent!==true)throw new Error('현재 화면을 OpenRouter로 보내는 데 동의해주세요.');
   if(typeof data.message!=='string'||!data.message.trim()||data.message.length>4000)throw new Error('질문은 1~4,000자로 입력해주세요.');
   const current=epoch,id=session,candidate=buffer.freeze(now());
@@ -125,7 +131,7 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
   const pending=screenPending;
   if(!pending?.frame||Date.now()>pending.expires||session!==pending.session||uploading)throw new Error('화면 질문을 다시 시작해주세요.');
   screenPending=null;clearTimeout(timer);
-  if(process.platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')!=='granted')throw new Error('화면 권한이 철회되어 캡처를 폐기했어요.');
+  if(platform==='darwin'&&systemPreferences.getMediaAccessStatus('screen')!=='granted')throw new Error('화면 권한이 철회되어 캡처를 폐기했어요.');
   const body={...payloadFrame(pending.frame,pending.frame.display,'screen'),message:pending.message,consent:true};
   const current=epoch;uploading=true;
   try{
@@ -134,5 +140,9 @@ module.exports=async function createVoice({win,display,api,systemPreferences,glo
    return result;
   }finally{uploading=false;}
  }
- return {configure,guide,shortcutStart,submit,select,cancel,disable,buttonStart,buttonRelease,screenPrepare,screenSubmit,sample:s=>{const onOverlay=[win(),...extraWindows()].some(w=>w&&!w.isDestroyed()&&w.isVisible()&&inside(s,w.getBounds()));const age=Number.isFinite(s.latency_ms)?Math.max(0,Math.min(2000,s.latency_ms)):0;buffer.add({...s,at_ms:now()-age,validity:onOverlay?'unknown':s.validity});},setSession:id=>{if(session!==id&&!activationPending)cancel('학습 상태가 바뀌어 녹음을 폐기했어요.');session=id;},busy:()=>uploading};
+ async function screenProbe(){
+  if(capturing||screenPending||frozen||manual||uploading||hold.state!=='idle')throw new Error('진행 중인 질문이 끝난 뒤 화면 권한을 테스트해주세요.');
+  capturing=true;try{const frame=await capture();return {ok:true,display_id:frame.display.display_id,...frame.image.getSize()};}finally{capturing=false;}
+ }
+ return {configure,guide,shortcutStart,submit,select,cancel,disable,buttonStart,buttonRelease,screenPrepare,screenSubmit,screenProbe,sample:s=>{const onOverlay=[win(),...extraWindows()].some(w=>w&&!w.isDestroyed()&&w.isVisible()&&inside(s,w.getBounds()));const age=Number.isFinite(s.latency_ms)?Math.max(0,Math.min(2000,s.latency_ms)):0;buffer.add({...s,at_ms:now()-age,validity:onOverlay?'unknown':s.validity});},setSession:id=>{if(session!==id&&!activationPending)cancel('학습 상태가 바뀌어 녹음을 폐기했어요.');session=id;},busy:()=>uploading};
 };

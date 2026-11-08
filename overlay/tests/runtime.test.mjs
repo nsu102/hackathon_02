@@ -19,3 +19,11 @@ test('connection fields reject multiline credentials and invalid model identifie
  for(const data of [{model:'bad\nmodel'},{model:'test',api_key:'secret\nINJECT=1'},{model:'test',api_key:'short'},{model:'test',api_key:'secret-with-"quote'}])assert.throws(()=>runtime.connectionValues(data));
  assert.equal(runtime.connectionValues({model:'anthropic/claude-sonnet-5.5',api_key:'fixture-valid-key'}).OPENROUTER_API_KEY,'fixture-valid-key');
 });
+
+test('permission repair only resets this installed app screen grant, never all permissions',async()=>{
+ const calls=[];const runFile=async(...args)=>calls.push(args);
+ assert.deepEqual(await runtime.resetScreenPermission({packaged:true,platform:'darwin',runFile}),{reset:true});
+ assert.deepEqual(calls,[['/usr/bin/tccutil',['reset','ScreenCapture','dev.studysignal.mac'],{timeout:10000}]]);
+ await assert.rejects(()=>runtime.resetScreenPermission({packaged:false,platform:'darwin',runFile}));
+ await assert.rejects(()=>runtime.resetScreenPermission({packaged:true,platform:'linux',runFile}));assert.equal(calls.length,1);
+});

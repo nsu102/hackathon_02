@@ -1,15 +1,15 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {EventEmitter} from 'node:events';
 import createVoice from '../native-voice.cjs';
-async function fixture({captureWait=async()=>{},configure=true,extraWindows=()=>[],onCapture=()=>{},captureError=null}={}){
- let micState='granted',now=0,visible=true,pointVisible=true,pressed;const sent=[],crops=[],order=[],hook=new EventEmitter();hook.start=()=>{};hook.stop=()=>{};
+async function fixture({captureWait=async()=>{},configure=true,extraWindows=()=>[],onCapture=()=>{},captureError=null,initialScreen='granted',grantOnCapture=false,hangCapture=false,captureTimeoutMs=8000}={}){
+ let screenState=initialScreen,micState='granted',now=0,visible=true,pointVisible=true,pressed;const sent=[],crops=[],order=[],hook=new EventEmitter();hook.start=()=>{};hook.stop=()=>{};
  const image={isEmpty:()=>false,getSize:()=>({width:2880,height:1800}),crop:r=>{crops.push(r);return {getSize:()=>({width:r.width,height:r.height}),toPNG:()=>Buffer.from('fixture')};},toDataURL:()=> 'data:image/png;base64,fixture'};
  const win={isDestroyed:()=>false,isVisible:()=>visible,getBounds:()=>({x:-500,y:0,width:400,height:600}),hide:()=>{visible=false;order.push('hide-overlay');},showInactive:()=>{visible=true;order.push('restore-overlay');},webContents:{send:(_,event)=>sent.push(event)}};
  const pointer={isVisible:()=>pointVisible,hide:()=>{pointVisible=false;order.push('hide-pointer');},isDestroyed:()=>false,showInactive:()=>{pointVisible=true;order.push('restore-pointer');}};
  const apiCalls=[];
- const voice=await createVoice({win:()=>win,display:()=>({id:2,bounds:{x:-1440,y:0,width:1440,height:900},scaleFactor:2}),api:async(...args)=>{apiCalls.push(args);return {message:{content:'fixture'}};},systemPreferences:{getMediaAccessStatus:type=>type==='microphone'?micState:'granted',isTrustedAccessibilityClient:()=>true,askForMediaAccess:async()=>true},globalShortcut:{register:(_,callback)=>{pressed=callback;return true;},unregister:()=>{}},desktopCapturer:{getSources:async()=>{assert.equal(visible,false);assert.equal(pointVisible,false);order.push('capture');if(captureError)throw new Error(captureError);return [{display_id:'2',thumbnail:image}];}},pointer:()=>pointer,extraWindows,onCapture,screen:{},keyHook:()=>({uIOhook:hook,UiohookKey:{Enter:28,Escape:1}}),now:()=>now,wait:captureWait});
+ const voice=await createVoice({win:()=>win,display:()=>({id:2,bounds:{x:-1440,y:0,width:1440,height:900},scaleFactor:2}),api:async(...args)=>{apiCalls.push(args);return {message:{content:'fixture'}};},systemPreferences:{getMediaAccessStatus:type=>type==='microphone'?micState:screenState,isTrustedAccessibilityClient:()=>true,askForMediaAccess:async()=>true},globalShortcut:{register:(_,callback)=>{pressed=callback;return true;},unregister:()=>{}},desktopCapturer:{getSources:async()=>{assert.equal(visible,false);assert.equal(pointVisible,false);order.push('capture');if(hangCapture)return new Promise(()=>{});if(grantOnCapture)screenState='granted';if(captureError)throw new Error(captureError);return [{display_id:'2',thumbnail:image}];}},pointer:()=>pointer,extraWindows,onCapture,screen:{},keyHook:()=>({uIOhook:hook,UiohookKey:{Enter:28,Escape:1}}),now:()=>now,wait:captureWait,platform:'darwin',captureTimeoutMs});
  if(configure)await voice.configure({enabled:true,consent:true,shortcut:'CommandOrControl+Shift+Enter'});voice.setSession('fixture-session');
  for(let t=0;t<=1000;t+=100){now=t;voice.sample({x:-1000,y:450,at_ms:t,validity:'valid',validated:true,pose_ok:true,calibration_id:'cal-1',display_id:2,validation_error_px:30});}
- return {voice,press:()=>pressed(),hook,sent,apiCalls,crops,order,setMic:s=>micState=s,setTime:t=>now=t};
+ return {voice,press:()=>pressed(),hook,sent,apiCalls,crops,order,setMic:s=>micState=s,setScreen:s=>screenState=s,setTime:t=>now=t};
 }
 test('native capture freezes gaze, hides owned windows, restores inactive and submits only after key release',async()=>{
  const f=await fixture();await f.press();assert.deepEqual(f.order,['hide-overlay','hide-pointer','capture','restore-overlay','restore-pointer']);const start=f.sent.find(e=>e.type==='start');assert.ok(start);
@@ -92,4 +92,23 @@ test('release or cancellation before session setup prevents late capture and upl
 });
 test('unconfigured shortcut opens setup without microphone, capture or recording',async()=>{
  const f=await fixture({configure:false});f.voice.guide();await f.press();assert.equal(f.sent.at(-1).type,'setup');assert.equal(f.order.length,0);assert.equal(f.apiCalls.length,0);f.voice.disable();
+});
+
+test('macOS denied preflight still reaches its OS request; refusal never uploads a frame',async()=>{
+ const f=await fixture({configure:false,initialScreen:'denied'});
+ await assert.rejects(()=>f.voice.screenPrepare({message:'질문',consent:true}),/화면 권한 복구/);
+ assert.ok(f.order.includes('capture'));assert.ok(f.order.includes('restore-overlay'));assert.equal(f.apiCalls.length,0);
+ await assert.rejects(()=>f.voice.screenSubmit({}),/다시 시작/);f.voice.disable();
+});
+test('a grant during the native request permits a local test without storing or uploading pixels',async()=>{
+ const f=await fixture({configure:false,initialScreen:'denied',grantOnCapture:true});
+ const result=await f.voice.screenProbe();assert.deepEqual(result,{ok:true,display_id:2,width:2880,height:1800});assert.equal(f.apiCalls.length,0);assert.equal(f.sent.some(e=>e.type==='start'),false);
+ await assert.rejects(()=>f.voice.screenSubmit({}),/다시 시작/);f.voice.disable();
+});
+test('restricted screen access cannot request or capture; a hung capture restores all windows',async()=>{
+ const restricted=await fixture({configure:false,initialScreen:'restricted'});await assert.rejects(()=>restricted.voice.screenProbe(),/시스템 정책/);assert.equal(restricted.order.length,0);restricted.voice.disable();
+ const hung=await fixture({configure:false,hangCapture:true,captureTimeoutMs:15});await assert.rejects(()=>hung.voice.screenProbe(),/지연/);assert.ok(hung.order.includes('restore-overlay'));assert.ok(hung.order.includes('restore-pointer'));assert.equal(hung.apiCalls.length,0);hung.voice.disable();
+});
+test('revoking screen permission after a typed capture discards it before any upload',async()=>{
+ const f=await fixture({configure:false});await f.voice.screenPrepare({message:'질문',consent:true});f.setScreen('denied');await assert.rejects(()=>f.voice.screenSubmit({}),/철회/);assert.equal(f.apiCalls.length,0);f.voice.disable();
 });

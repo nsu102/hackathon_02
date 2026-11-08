@@ -1,0 +1,17 @@
+{
+  "version": "0.12.2",
+  "installed_from_dmg": true,
+  "codesign_verified": true,
+  "signing": "ad-hoc; version-bound designated requirement",
+  "usable_developer_signing_identity": false,
+  "dmg_bytes": 167203271,
+  "dmg_sha256": "b3b909252bbe55e157d220c36c7acb14733b2c9c4b0acfbca1acf29a5fee121b",
+  "node_passed": 80,
+  "main_ui_passed": 31,
+  "screen_before_repair": "denied",
+  "reset_scope": "ScreenCapture dev.studysignal.mac",
+  "user_regrant_required": true,
+  "real_capture_confirmed": false,
+  "screen_pixels_saved": false,
+  "external_model_called": false
+}

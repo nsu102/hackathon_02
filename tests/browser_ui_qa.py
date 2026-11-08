@@ -20,6 +20,8 @@ with sync_playwright() as p:
  window.pressOrReleaseShortcut=()=>{if(document.getElementById('voice-status').textContent.startsWith('녹음 중'))return window.voiceEvent({type:'release',data:window.recordId});window.recordId++;return window.voiceEvent({type:'start',data:{id:window.recordId,control:'button',attachment:{display_id:1,width:2880,height:1800}}});};
  window.studyBridge={ready:async()=>({ok:true,health:{study_model:{configured:true}}}),onDisplayChanged:cb=>window.displayChanged=cb,onLost:()=>{},onVoice:cb=>{window.voiceEvent=cb;},onAppAction:cb=>{window.appAction=cb;},
  window:async(action,data)=>{window.actions.push({action,data});
+ if(action==='permission-status')return {runtime:'Study Signal',version:'0.12.2',packaged:true,app_path:'/Applications/Study Signal.app',screen:'granted',microphone:'granted'};
+ if(action==='permission-screen-test')return {ok:true,width:2880,height:1800};
  if(action==='collapse'){window.collapsed=!window.collapsed;return window.collapsed;}
  if(action==='displays')return [{id:1,label:'모의 모니터',x:-1440,y:0,width:1440,height:900,scale:2}];
  if(action==='gaze-addon-status')return {installed:true,busy:false};if(action==='gaze-display')return {x:-1440,y:0,width:1440,height:900,display_id:1};
@@ -85,6 +87,7 @@ with sync_playwright() as p:
  assert page.evaluate('window.planBodies.at(-1).consent&&window.planBodies.at(-1).regenerate')
  page.locator('#checklist-visible').uncheck();assert page.evaluate("window.actions.filter(a=>a.action==='checklist-update').at(-1).data.visible") is False
  page.locator('#checklist-visible').check()
+ settings('permission-settings');page.locator('#permission-screen-test').click();page.wait_for_function("() => document.getElementById('permission-status').textContent.includes('캡처 테스트 성공')");assert '/Applications/Study Signal.app' in page.locator('#permission-app').inner_text()
  settings('voice-settings');page.locator('#read-answer').uncheck();settings('focus-settings');page.locator('#nag-mute').check();study()
  # Only direction evidence, no pixel coordinates or validated calibration.
  page.evaluate("()=>{const at=performance.now()+22000;for(let t=at-21000;t<=at;t+=100)window.injectGaze({at_ms:t,validated:false,validity:'unknown',pose_ok:false,presence:{ready:true,state:'away',reason:'direction_away'}});}")
@@ -137,7 +140,7 @@ with sync_playwright() as p:
  assert not page.evaluate("window.actions.some(a=>a.action==='calibration-open'||a.action==='gaze-visible'||a.action==='materials-example')")
  assert not page.evaluate("window.actions.some(a=>a.action==='voice-shortcut-guide'||a.action==='voice-configure')")
  assert not errors,errors
- passed=['pad text query attaches screen and receives answer','failed Start request can be retried','start button ready and clickable','start again after ending','removed calibration and validation UI','removed built-in paper demo','legacy region preference migrated','file upload creates checklist','manual checklist completion and edit','AI plan regeneration consent','checklist visibility','settings separate from study','six collapsed settings groups','390/440px no horizontal overflow','uncalibrated direction triggers away alert','false alarm grace','click begins WebM recording','send click submits frozen screen question','cancel discards recording','automatic full display without a region selector','voice response saved to scratchpad','translation summary saved','cancelled pad request interrupted','natural TTS plays','voice preference saved','recording stops TTS','collapsed recording indicator','session pause/end','API key cleared after save','no raw key in localStorage']
+ passed=['screen permission probe and precise installed app path','pad text query attaches screen and receives answer','failed Start request can be retried','start button ready and clickable','start again after ending','removed calibration and validation UI','removed built-in paper demo','legacy region preference migrated','file upload creates checklist','manual checklist completion and edit','AI plan regeneration consent','checklist visibility','settings separate from study','six collapsed settings groups','390/440px no horizontal overflow','uncalibrated direction triggers away alert','false alarm grace','click begins WebM recording','send click submits frozen screen question','cancel discards recording','automatic full display without a region selector','voice response saved to scratchpad','translation summary saved','cancelled pad request interrupted','natural TTS plays','voice preference saved','recording stops TTS','collapsed recording indicator','session pause/end','API key cleared after save','no raw key in localStorage']
  (root/'docs/qa/browser-qa.json').write_text(json.dumps(dict(passed=passed,page_errors=errors,environment='headless system Chrome; synthetic microphone and direction; mocked native bridge. No physical accuracy claims.'),ensure_ascii=False,indent=2))
  print(f'Browser UI: {len(passed)} workflows passed; no page errors')
  browser.close()

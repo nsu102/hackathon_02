@@ -30,4 +30,9 @@ function connectionValues(data){
  }
  return values;
 }
-module.exports={paths,initialize,writeEnv,connectionValues};
+async function resetScreenPermission({packaged,platform,runFile}){
+ if(!packaged||platform!=='darwin')throw new Error('화면 권한 복구는 Mac 설치판에서만 사용할 수 있어요.');
+ await runFile('/usr/bin/tccutil',['reset','ScreenCapture','dev.studysignal.mac'],{timeout:10000});
+ return {reset:true};
+}
+module.exports={paths,initialize,writeEnv,connectionValues,resetScreenPermission};
